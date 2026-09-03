@@ -5,11 +5,12 @@ import com.desafio.entity.Aula;
 import com.desafio.entity.Matricula;
 import com.desafio.exception.HorarioConflitanteException;
 import com.desafio.exception.VagasEsgotadasException;
+import com.desafio.repository.AlunoRepository;
+import com.desafio.repository.AulaRepository;
+import com.desafio.repository.MatriculaRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
-import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
@@ -18,61 +19,49 @@ import java.util.List;
 public class MatriculaService {
 
     @Inject
-    EntityManager entityManager;
+    AlunoRepository alunoRepository;
+
+    @Inject
+    AulaRepository aulaRepository;
+
+    @Inject
+    MatriculaRepository matriculaRepository;
 
     @Transactional
     public Matricula matricular(Long alunoId, Long aulaId) {
-        Aluno aluno = entityManager.find(Aluno.class, alunoId);
+        Aluno aluno = alunoRepository.findById(alunoId);
         if (aluno == null) {
             throw new IllegalArgumentException("Aluno não encontrado: " + alunoId);
         }
 
-        Aula aula = lockAulaForUpdate(aulaId);
+        Aula aula = aulaRepository.findById(aulaId, LockModeType.PESSIMISTIC_WRITE);
+        if (aula == null) {
+            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
+        }
 
         if (aula.getVagas() == null || aula.getVagas() <= 0) {
             throw new VagasEsgotadasException("Não há vagas disponíveis para a aula: " + aulaId);
         }
 
-        if (jaMatriculado(alunoId, aulaId)) {
+        if (matriculaRepository.existsByAlunoAndAula(alunoId, aulaId)) {
             throw new IllegalArgumentException("Aluno já matriculado nesta aula");
         }
 
         validarChoqueHorario(alunoId, aula);
 
         aula.setVagas(aula.getVagas() - 1);
+        aulaRepository.persist(aula);
 
         Matricula matricula = new Matricula();
         matricula.setAluno(aluno);
         matricula.setAula(aula);
-        entityManager.persist(matricula);
+        matriculaRepository.persist(matricula);
 
         return matricula;
     }
 
-    private Aula lockAulaForUpdate(Long aulaId) {
-        Aula aula = entityManager.find(Aula.class, aulaId, LockModeType.PESSIMISTIC_WRITE);
-        if (aula == null) {
-            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
-        }
-        return aula;
-    }
-
-    private boolean jaMatriculado(Long alunoId, Long aulaId) {
-        Long count = entityManager.createQuery(
-                        "SELECT COUNT(m) FROM Matricula m WHERE m.aluno.id = :alunoId AND m.aula.id = :aulaId",
-                        Long.class)
-                .setParameter("alunoId", alunoId)
-                .setParameter("aulaId", aulaId)
-                .getSingleResult();
-        return count > 0;
-    }
-
     private void validarChoqueHorario(Long alunoId, Aula aula) {
-        List<Aula> aulasDoAluno = entityManager.createQuery(
-                        "SELECT m.aula FROM Matricula m WHERE m.aluno.id = :alunoId",
-                        Aula.class)
-                .setParameter("alunoId", alunoId)
-                .getResultList();
+        List<Aula> aulasDoAluno = matriculaRepository.findAulasByAluno(alunoId);
 
         for (Aula existente : aulasDoAluno) {
             if (horariosSobrepostos(existente, aula)) {
