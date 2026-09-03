@@ -1,0 +1,5 @@
+.git
+node_modules
+# Mantém target fora do contexto para rebuild limpo
+target
+.mvn/wrapper/maven-wrapper.jar

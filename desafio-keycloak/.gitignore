@@ -1,0 +1,4 @@
+# Arquivos gerados/temporários
+*.tmp
+.DS_Store
+data/

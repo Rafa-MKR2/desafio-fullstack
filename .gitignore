@@ -1,0 +1,16 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Local environment
+.env
+
+# Build artifacts covered by per-project .gitignore files

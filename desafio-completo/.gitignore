@@ -1,0 +1,10 @@
+# Logs
+*.log
+
+# Volumes locais
+./data/
+docker-data/
+
+# Arquivos temporários
+*.tmp
+.DS_Store

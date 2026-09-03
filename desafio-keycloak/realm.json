@@ -1,0 +1,291 @@
+{
+  "realm": "desafio",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "roles": {
+    "realm": [
+      {
+        "name": "coordenador",
+        "description": "Role de Coordenador"
+      },
+      {
+        "name": "aluno",
+        "description": "Role de Aluno"
+      },
+      {
+        "name": "offline_access",
+        "description": "${role_offline-access}"
+      },
+      {
+        "name": "uma_authorization",
+        "description": "${role_uma_authorization}"
+      },
+      {
+        "name": "default-roles-desafio",
+        "description": "${role_default-roles}"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "backend",
+      "name": "Backend API",
+      "description": "Backend Quarkus (confidencial)",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "backend-secret-123456",
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:8081/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "*"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      }
+    },
+    {
+      "clientId": "frontend",
+      "name": "Frontend Angular",
+      "description": "Frontend Angular (público)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:4200"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "*"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      }
+    },
+    {
+      "clientId": "account",
+      "name": "${client_account}",
+      "rootUrl": "${authBaseUrl}",
+      "baseUrl": "/realms/desafio/account/",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "/realms/desafio/account/*"
+      ],
+      "webOrigins": []
+    },
+    {
+      "clientId": "account-console",
+      "name": "${client_account-console}",
+      "rootUrl": "${authBaseUrl}",
+      "baseUrl": "/realms/desafio/account/",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "/realms/desafio/account/*"
+      ],
+      "webOrigins": []
+    }
+  ],
+  "users": [
+    {
+      "username": "coordenador1",
+      "email": "coordenador1@email.com",
+      "firstName": "Dr. José",
+      "lastName": "Coordenador",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "credentialData": "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"Zmpm5Nmqlo7hyZ7uscOTUr+up0uV46kMa17mLxM5dcyrV1A4CFVbKN5MNuZEnxWrxELSIS3YGkCGvjW7efovQA==\",\"salt\":\"cwuBaL2AfPA7/i5mQ11A8w==\",\"additionalParameters\":{}}"
+        }
+      ],
+      "realmRoles": [
+        "coordenador"
+      ]
+    },
+    {
+      "username": "coordenador2",
+      "email": "coordenador2@email.com",
+      "firstName": "Profa. Maria",
+      "lastName": "Coordenador",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "credentialData": "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"Zmpm5Nmqlo7hyZ7uscOTUr+up0uV46kMa17mLxM5dcyrV1A4CFVbKN5MNuZEnxWrxELSIS3YGkCGvjW7efovQA==\",\"salt\":\"cwuBaL2AfPA7/i5mQ11A8w==\",\"additionalParameters\":{}}"
+        }
+      ],
+      "realmRoles": [
+        "coordenador"
+      ]
+    },
+    {
+      "username": "coordenador3",
+      "email": "coordenador3@email.com",
+      "firstName": "Dr. Paulo",
+      "lastName": "Coordenador",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "credentialData": "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"Zmpm5Nmqlo7hyZ7uscOTUr+up0uV46kMa17mLxM5dcyrV1A4CFVbKN5MNuZEnxWrxELSIS3YGkCGvjW7efovQA==\",\"salt\":\"cwuBaL2AfPA7/i5mQ11A8w==\",\"additionalParameters\":{}}"
+        }
+      ],
+      "realmRoles": [
+        "coordenador"
+      ]
+    },
+    {
+      "username": "aluno1",
+      "email": "aluno1@email.com",
+      "firstName": "João",
+      "lastName": "Silva",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "credentialData": "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"Zmpm5Nmqlo7hyZ7uscOTUr+up0uV46kMa17mLxM5dcyrV1A4CFVbKN5MNuZEnxWrxELSIS3YGkCGvjW7efovQA==\",\"salt\":\"cwuBaL2AfPA7/i5mQ11A8w==\",\"additionalParameters\":{}}"
+        }
+      ],
+      "realmRoles": [
+        "aluno"
+      ]
+    },
+    {
+      "username": "aluno2",
+      "email": "aluno2@email.com",
+      "firstName": "Maria",
+      "lastName": "Santos",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "credentialData": "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"Zmpm5Nmqlo7hyZ7uscOTUr+up0uV46kMa17mLxM5dcyrV1A4CFVbKN5MNuZEnxWrxELSIS3YGkCGvjW7efovQA==\",\"salt\":\"cwuBaL2AfPA7/i5mQ11A8w==\",\"additionalParameters\":{}}"
+        }
+      ],
+      "realmRoles": [
+        "aluno"
+      ]
+    },
+    {
+      "username": "aluno3",
+      "email": "aluno3@email.com",
+      "firstName": "Pedro",
+      "lastName": "Costa",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "credentialData": "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"Zmpm5Nmqlo7hyZ7uscOTUr+up0uV46kMa17mLxM5dcyrV1A4CFVbKN5MNuZEnxWrxELSIS3YGkCGvjW7efovQA==\",\"salt\":\"cwuBaL2AfPA7/i5mQ11A8w==\",\"additionalParameters\":{}}"
+        }
+      ],
+      "realmRoles": [
+        "aluno"
+      ]
+    },
+    {
+      "username": "aluno4",
+      "email": "aluno4@email.com",
+      "firstName": "Ana",
+      "lastName": "Oliveira",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "credentialData": "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"Zmpm5Nmqlo7hyZ7uscOTUr+up0uV46kMa17mLxM5dcyrV1A4CFVbKN5MNuZEnxWrxELSIS3YGkCGvjW7efovQA==\",\"salt\":\"cwuBaL2AfPA7/i5mQ11A8w==\",\"additionalParameters\":{}}"
+        }
+      ],
+      "realmRoles": [
+        "aluno"
+      ]
+    },
+    {
+      "username": "aluno5",
+      "email": "aluno5@email.com",
+      "firstName": "Lucas",
+      "lastName": "Pereira",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "credentialData": "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}",
+          "secretData": "{\"value\":\"Zmpm5Nmqlo7hyZ7uscOTUr+up0uV46kMa17mLxM5dcyrV1A4CFVbKN5MNuZEnxWrxELSIS3YGkCGvjW7efovQA==\",\"salt\":\"cwuBaL2AfPA7/i5mQ11A8w==\",\"additionalParameters\":{}}"
+        }
+      ],
+      "realmRoles": [
+        "aluno"
+      ]
+    }
+  ],
+  "defaultRole": {
+    "name": "default-roles-desafio",
+    "description": "${role_default-roles}",
+    "composite": true,
+    "clientRole": false,
+    "containerId": "desafio"
+  }
+}
