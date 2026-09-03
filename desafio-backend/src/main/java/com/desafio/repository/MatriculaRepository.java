@@ -25,4 +25,8 @@ public class MatriculaRepository implements PanacheRepository<Matricula> {
                 .setParameter("alunoId", alunoId)
                 .getResultList();
     }
+
+    public long countByAula(Long aulaId) {
+        return count("aula.id", aulaId);
+    }
 }
