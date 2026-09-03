@@ -64,34 +64,10 @@ public class MatriculaService {
         List<Aula> aulasDoAluno = matriculaRepository.findAulasByAluno(alunoId);
 
         for (Aula existente : aulasDoAluno) {
-            if (horariosSobrepostos(existente, aula)) {
+            if (HorarioUtil.horariosSobrepostos(existente, aula)) {
                 throw new HorarioConflitanteException(
                         "Choque de horário com a aula na disciplina: " + existente.getDisciplina().getNome());
             }
         }
-    }
-
-    private boolean horariosSobrepostos(Aula a, Aula b) {
-        String diaA = a.getHorario().getDiaSemana();
-        String diaB = b.getHorario().getDiaSemana();
-
-        if (diaA == null || diaB == null || !diaA.equalsIgnoreCase(diaB)) {
-            return false;
-        }
-
-        int inicioA = toMinutos(a.getHorario().getHoraInicio());
-        int fimA = toMinutos(a.getHorario().getHoraFim());
-        int inicioB = toMinutos(b.getHorario().getHoraInicio());
-        int fimB = toMinutos(b.getHorario().getHoraFim());
-
-        return inicioA < fimB && inicioB < fimA;
-    }
-
-    private int toMinutos(String hora) {
-        if (hora == null) {
-            throw new IllegalStateException("Horário inválido (nulo)");
-        }
-        String[] partes = hora.split(":");
-        return Integer.parseInt(partes[0]) * 60 + Integer.parseInt(partes[1]);
     }
 }
