@@ -29,6 +29,10 @@ public class MatriculaRepository implements PanacheRepository<Matricula> {
                 .getResultList();
     }
 
+    public List<Matricula> listByAluno(Long alunoId) {
+        return list("aluno.id", alunoId);
+    }
+
     public long countByAula(Long aulaId) {
         return count("aula.id", aulaId);
     }

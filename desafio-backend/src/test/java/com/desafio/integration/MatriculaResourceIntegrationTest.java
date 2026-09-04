@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -202,6 +204,99 @@ class MatriculaResourceIntegrationTest {
                         {"aulaId": %d}
                         """.formatted(aulaId))
                 .when().post("/matriculas")
+                .then().statusCode(403);
+    }
+
+    @Test
+    void listarMatriculasSemAutenticacaoRetorna401() {
+        given()
+                .when().get("/matriculas")
+                .then().statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "aluno1@email.com", roles = "aluno")
+    void listarMatriculasDoAlunoSemMatriculasRetornaListaVazia() {
+        given()
+                .when().get("/matriculas")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(0));
+    }
+
+    @Test
+    @TestSecurity(user = "aluno1@email.com", roles = "aluno")
+    void listarMatriculasDoAlunoRetornaSomenteAsDele() {
+        Long aulaSegunda = criarAula("Matemática", "Ana Paula", "Segunda", 10);
+        Long aulaTerca = criarAula("Português", "Carlos Alberto", "Terça", 10);
+
+        given().contentType("application/json")
+                .body("""
+                        {"aulaId": %d}
+                        """.formatted(aulaSegunda))
+                .when().post("/matriculas")
+                .then().statusCode(201);
+        given().contentType("application/json")
+                .body("""
+                        {"aulaId": %d}
+                        """.formatted(aulaTerca))
+                .when().post("/matriculas")
+                .then().statusCode(201);
+
+        // Outro aluno se matricula na mesma aula: as listagens do aluno1
+        // autenticado não podem vazar os dados do aluno2.
+        matriculaService.matricular(seeder.alunoId("aluno2@email.com"), aulaSegunda);
+
+        given()
+                .when().get("/matriculas")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(2))
+                .body("aulaId", hasItems(aulaSegunda.intValue(), aulaTerca.intValue()))
+                .body("alunoId", everyItem(equalTo(seeder.alunoId("aluno1@email.com").intValue())));
+
+        given()
+                .when().get("/matriculas/aulas")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(2))
+                .body("id", hasItems(aulaSegunda.intValue(), aulaTerca.intValue()));
+    }
+
+    @Test
+    @TestSecurity(user = "aluno1@email.com", roles = "aluno")
+    void listarAulasDoAlunoRetornaAulasComOcupacao() {
+        Long aulaId = criarAula("Matemática", "Ana Paula", "Segunda", 10);
+
+        given().contentType("application/json")
+                .body("""
+                        {"aulaId": %d}
+                        """.formatted(aulaId))
+                .when().post("/matriculas")
+                .then().statusCode(201);
+
+        given()
+                .when().get("/matriculas/aulas")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(1))
+                .body("[0].id", equalTo(aulaId.intValue()))
+                .body("[0].disciplinaNome", equalTo("Matemática"))
+                .body("[0].professorNome", equalTo("Ana Paula"))
+                .body("[0].vagas", equalTo(10))
+                .body("[0].vagasOcupadas", equalTo(1))
+                .body("[0].vagasRestantes", equalTo(9));
+    }
+
+    @Test
+    @TestSecurity(user = "coordenador1@email.com", roles = "coordenador")
+    void coordenadorNaoPodeListarMatriculasRetorna403() {
+        given()
+                .when().get("/matriculas")
+                .then().statusCode(403);
+
+        given()
+                .when().get("/matriculas/aulas")
                 .then().statusCode(403);
     }
 }
