@@ -1,7 +1,9 @@
 package com.desafio.dto;
 
 import com.desafio.entity.Aula;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+@Schema(description = "Aula com os dados de disciplina, professor e horário")
 public class AulaResponse {
 
     private Long id;

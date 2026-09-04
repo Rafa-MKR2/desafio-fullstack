@@ -1,5 +1,8 @@
 package com.desafio.dto;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+@Schema(description = "Dados da matrícula criada")
 public class MatriculaResponse {
 
     private Long id;
