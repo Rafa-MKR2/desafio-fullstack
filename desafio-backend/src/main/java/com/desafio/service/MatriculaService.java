@@ -4,6 +4,8 @@ import com.desafio.entity.Aluno;
 import com.desafio.entity.Aula;
 import com.desafio.entity.Matricula;
 import com.desafio.exception.HorarioConflitanteException;
+import com.desafio.exception.MatriculaDuplicadaException;
+import com.desafio.exception.NotFoundException;
 import com.desafio.exception.VagasEsgotadasException;
 import com.desafio.repository.AlunoRepository;
 import com.desafio.repository.AulaRepository;
@@ -31,12 +33,12 @@ public class MatriculaService {
     public Matricula matricular(Long alunoId, Long aulaId) {
         Aluno aluno = alunoRepository.findById(alunoId);
         if (aluno == null) {
-            throw new IllegalArgumentException("Aluno não encontrado: " + alunoId);
+            throw new NotFoundException("Aluno não encontrado: " + alunoId);
         }
 
         Aula aula = aulaRepository.findById(aulaId, LockModeType.PESSIMISTIC_WRITE);
         if (aula == null) {
-            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
+            throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
 
         if (aula.getVagas() == null || aula.getVagas() <= 0) {
@@ -44,7 +46,7 @@ public class MatriculaService {
         }
 
         if (matriculaRepository.existsByAlunoAndAula(alunoId, aulaId)) {
-            throw new IllegalArgumentException("Aluno já matriculado nesta aula");
+            throw new MatriculaDuplicadaException("Aluno já matriculado nesta aula");
         }
 
         validarChoqueHorario(alunoId, aula);

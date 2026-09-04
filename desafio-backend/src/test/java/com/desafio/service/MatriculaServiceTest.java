@@ -6,6 +6,8 @@ import com.desafio.entity.Disciplina;
 import com.desafio.entity.Horario;
 import com.desafio.entity.Matricula;
 import com.desafio.exception.HorarioConflitanteException;
+import com.desafio.exception.MatriculaDuplicadaException;
+import com.desafio.exception.NotFoundException;
 import com.desafio.exception.VagasEsgotadasException;
 import com.desafio.repository.AlunoRepository;
 import com.desafio.repository.AulaRepository;
@@ -71,19 +73,19 @@ class MatriculaServiceTest {
     }
 
     @Test
-    void matricularComAlunoInexistenteLancaIllegalArgumentException() {
+    void matricularComAlunoInexistenteLancaNotFoundException() {
         when(alunoRepository.findById(1L)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.matricular(1L, 10L));
+        assertThrows(NotFoundException.class, () -> service.matricular(1L, 10L));
         verify(matriculaRepository, never()).persist(any(Matricula.class));
     }
 
     @Test
-    void matricularComAulaInexistenteLancaIllegalArgumentException() {
+    void matricularComAulaInexistenteLancaNotFoundException() {
         when(alunoRepository.findById(1L)).thenReturn(aluno);
         when(aulaRepository.findById(eq(10L), any(LockModeType.class))).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.matricular(1L, 10L));
+        assertThrows(NotFoundException.class, () -> service.matricular(1L, 10L));
         verify(matriculaRepository, never()).persist(any(Matricula.class));
     }
 
@@ -98,12 +100,12 @@ class MatriculaServiceTest {
     }
 
     @Test
-    void matriculaDuplicadaLancaIllegalArgumentException() {
+    void matriculaDuplicadaLancaMatriculaDuplicadaException() {
         when(alunoRepository.findById(1L)).thenReturn(aluno);
         when(aulaRepository.findById(eq(10L), any(LockModeType.class))).thenReturn(aula);
         when(matriculaRepository.existsByAlunoAndAula(1L, 10L)).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> service.matricular(1L, 10L));
+        assertThrows(MatriculaDuplicadaException.class, () -> service.matricular(1L, 10L));
         verify(matriculaRepository, never()).persist(any(Matricula.class));
     }
 

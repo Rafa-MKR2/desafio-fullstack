@@ -4,6 +4,7 @@ import com.desafio.dto.MatriculaRequest;
 import com.desafio.dto.MatriculaResponse;
 import com.desafio.entity.Aluno;
 import com.desafio.entity.Matricula;
+import com.desafio.exception.NotFoundException;
 import com.desafio.repository.AlunoRepository;
 import com.desafio.service.MatriculaService;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -16,6 +17,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -47,8 +49,9 @@ public class MatriculaResource {
     @APIResponses({
             @APIResponse(responseCode = "201", description = "Matrícula criada",
                     content = @Content(schema = @Schema(implementation = MatriculaResponse.class))),
-            @APIResponse(responseCode = "400", description = "Requisição inválida, matrícula duplicada ou aluno sem cadastro"),
-            @APIResponse(responseCode = "409", description = "Vagas esgotadas ou choque de horário com aula já matriculada")
+            @APIResponse(responseCode = "400", description = "Requisição inválida (validação)"),
+            @APIResponse(responseCode = "404", description = "Aluno sem cadastro ou aula inexistente"),
+            @APIResponse(responseCode = "409", description = "Matrícula duplicada, vagas esgotadas ou choque de horário com aula já matriculada")
     })
     public Response matricular(@Valid MatriculaRequest request) {
         Aluno aluno = alunoAtual();
@@ -59,11 +62,15 @@ public class MatriculaResource {
     }
 
     private Aluno alunoAtual() {
-        Object emailClaim = securityIdentity.getClaim("email");
-        String email = emailClaim instanceof String ? (String) emailClaim
-                : securityIdentity.getPrincipal().getName();
+        String emailClaim = null;
+        if (securityIdentity.getPrincipal() instanceof JsonWebToken jwt) {
+            emailClaim = jwt.getClaim("email");
+        }
+        final String email = (emailClaim == null || emailClaim.isBlank())
+                ? securityIdentity.getPrincipal().getName()
+                : emailClaim;
         return alunoRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new NotFoundException(
                         "Aluno não encontrado para o usuário autenticado: " + email));
     }
 }
