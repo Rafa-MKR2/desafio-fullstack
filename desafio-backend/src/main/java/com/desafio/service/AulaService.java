@@ -5,6 +5,7 @@ import com.desafio.entity.Aula;
 import com.desafio.entity.Disciplina;
 import com.desafio.entity.Horario;
 import com.desafio.entity.Professor;
+import com.desafio.exception.NotFoundException;
 import com.desafio.exception.ProfessorConflitanteException;
 import com.desafio.repository.AulaRepository;
 import com.desafio.repository.DisciplinaRepository;
@@ -54,7 +55,7 @@ public class AulaService {
     public Aula atualizar(Long aulaId, AulaRequest request) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null) {
-            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
+            throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
 
         validarReferencias(request);
@@ -79,7 +80,7 @@ public class AulaService {
     public void excluir(Long aulaId) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null) {
-            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
+            throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
 
         if (matriculaRepository.countByAula(aulaId) > 0) {
@@ -92,7 +93,7 @@ public class AulaService {
     public Aula buscarPorId(Long aulaId) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null) {
-            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
+            throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
         return aula;
     }
