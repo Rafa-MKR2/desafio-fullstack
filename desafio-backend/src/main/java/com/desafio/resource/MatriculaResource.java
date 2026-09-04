@@ -59,7 +59,9 @@ public class MatriculaResource {
     }
 
     private Aluno alunoAtual() {
-        String email = securityIdentity.getPrincipal().getName();
+        Object emailClaim = securityIdentity.getClaim("email");
+        String email = emailClaim instanceof String ? (String) emailClaim
+                : securityIdentity.getPrincipal().getName();
         return alunoRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Aluno não encontrado para o usuário autenticado: " + email));
