@@ -4,7 +4,10 @@ import com.desafio.entity.Aula;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class AulaRepository implements PanacheRepository<Aula> {
@@ -15,6 +18,29 @@ public class AulaRepository implements PanacheRepository<Aula> {
 
     public List<Aula> listarPorProfessor(Long professorId) {
         return list("professor.id", professorId);
+    }
+
+    public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana) {
+        Map<String, Object> params = new HashMap<>();
+        List<String> clausulas = new ArrayList<>();
+
+        if (disciplinaId != null) {
+            clausulas.add("disciplina.id = :disciplinaId");
+            params.put("disciplinaId", disciplinaId);
+        }
+        if (professorId != null) {
+            clausulas.add("professor.id = :professorId");
+            params.put("professorId", professorId);
+        }
+        if (diaSemana != null && !diaSemana.isBlank()) {
+            clausulas.add("lower(horario.diaSemana) = :diaSemana");
+            params.put("diaSemana", diaSemana.toLowerCase());
+        }
+
+        if (clausulas.isEmpty()) {
+            return listAll();
+        }
+        return list(String.join(" and ", clausulas), params);
     }
 
     public List<Aula> listarPorProfessorMesmoHorario(Long professorId, String diaSemana,
