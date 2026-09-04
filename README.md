@@ -4,9 +4,9 @@ Full-stack academic administration system for managing courses, disciplines,
 professors, schedules, coordinators, and students, secured with Keycloak.
 
 > **Status:** in progress. Infrastructure, identity, database schema,
-> backend domain model, and the enrollment business logic are in place.
-> The remaining backend endpoints, authorization, and the Angular UI are
-> still to be implemented.
+> backend domain model, enrollment and aula business logic, REST
+> resources, role-based authorization, and unit tests are in place.
+> Integration tests and the Angular UI are still to be implemented.
 
 ## Architecture
 
@@ -66,14 +66,32 @@ desafio-fullstack/
 - `MatriculaService` implements enrollment rules: capacity control
   (pessimistic lock), duplicate enrollment prevention, and schedule
   conflict detection (day + time range overlap).
+- `AulaService` implements class CRUD rules: reference validation,
+  professor schedule conflict, vacancies never below enrolled count,
+  and delete protection when enrollments exist.
 
 #### API (`resource/`, `dto/`)
-- `MatriculaResource` (`POST /matriculas`) with request/response DTOs
-  using Bean Validation.
+- `MatriculaResource` (`POST /matriculas`) for the authenticated student,
+  resolved from the JWT (`preferred_username` → e-mail), so students can
+  only enroll themselves.
+- `AulaResource` (`/aulas`): `POST`, `GET` (with `disciplinaId`,
+  `professorId`, `diaSemana` filters), `GET/{id}`, `PUT/{id}`, `DELETE/{id}`.
+- Request/response DTOs using Bean Validation, documented with OpenAPI
+  annotations (`@Schema`, `@Operation`, `@APIResponse`).
+
+#### Authorization
+- `@RolesAllowed` via Keycloak realm roles: `coordenador` manages aulas
+  (write), `aluno` and `coordenador` can list/search aulas, and only
+  `aluno` can enroll.
 
 #### Error handling (`exception/`)
-- Centralized `ExceptionMapper`s for business errors, invalid arguments,
-  and validation failures, returning a standardized error payload.
+- Centralized `ExceptionMapper`s for business errors (409), invalid
+  arguments (400), validation failures (400), and missing resources
+  (404), returning a standardized error payload.
+
+#### Tests (`src/test/`)
+- Mockito unit tests for `MatriculaService` and `AulaService` covering the
+  business rules (16 tests), with no live database required.
 
 ### Frontend (`desafio-frontend/`)
 - Angular application bootstrapped with Keycloak integration
@@ -138,11 +156,13 @@ npx nx serve frontend
 ## Next Steps / To-Do
 
 ### Backend
-- [ ] Implement `AulaService` (CRUD with creation/editing rules).
-- [ ] Create REST resources for `Aula` and listing/filtering endpoints.
-- [ ] Protect endpoints with role-based access control (`@RolesAllowed`).
-- [ ] Document endpoints with Swagger/OpenAPI annotations.
-- [ ] Add unit and integration tests (especially enrollment concurrency).
+- [x] Implement `AulaService` (CRUD with creation/editing rules).
+- [x] Create REST resources for `Aula` and listing/filtering endpoints.
+- [x] Protect endpoints with role-based access control (`@RolesAllowed`).
+- [x] Document endpoints with Swagger/OpenAPI annotations.
+- [x] Add unit tests for the business rules.
+- [ ] Add integration tests (especially enrollment concurrency) with a
+      test profile / seed data.
 
 ### Frontend
 - [ ] Build API services with `HttpClient`.
@@ -158,8 +178,8 @@ npx nx serve frontend
 ## CI
 
 GitHub Actions (`ci.yml`) runs on every push/PR to `main` and
-`development`: backend build + unit tests (JDK 21) and frontend
-build + tests (Node.js 22).
+`development`: backend build + unit tests (JDK 21, against a PostgreSQL
+service container) and frontend build + tests (Node.js 22).
 
 ## License
 
