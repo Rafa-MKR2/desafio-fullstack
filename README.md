@@ -4,9 +4,10 @@ Full-stack academic administration system for managing courses, disciplines,
 professors, schedules, coordinators, and students, secured with Keycloak.
 
 > **Status:** in progress. Infrastructure, identity, database schema,
-> backend domain model, and the enrollment business logic are in place.
-> The remaining backend endpoints, authorization, and the Angular UI are
-> still to be implemented.
+> backend domain model, enrollment and aula business logic, REST
+> resources (including read-only catalogs and "my enrollments" for
+> students), role-based authorization, and unit + integration tests are
+> in place. The Angular UI is still to be implemented.
 
 ## Architecture
 
@@ -66,14 +67,41 @@ desafio-fullstack/
 - `MatriculaService` implements enrollment rules: capacity control
   (pessimistic lock), duplicate enrollment prevention, and schedule
   conflict detection (day + time range overlap).
+- `AulaService` implements class CRUD rules: reference validation,
+  professor schedule conflict, vacancies never below enrolled count,
+  and delete protection when enrollments exist.
 
 #### API (`resource/`, `dto/`)
-- `MatriculaResource` (`POST /matriculas`) with request/response DTOs
-  using Bean Validation.
+- `MatriculaResource` (`/matriculas`): `POST` enrolls the authenticated
+  student, resolved from the JWT (`preferred_username` → e-mail), so
+  students can only enroll themselves; `GET` lists the student's own
+  enrollments and `GET /aulas` lists the aulas they are enrolled in
+  (with occupancy).
+- `AulaResource` (`/aulas`): `POST`, `GET` (with `disciplinaId`,
+  `professorId`, `diaSemana` filters), `GET/{id}`, `PUT/{id}`, `DELETE/{id}`.
+- `CatalogoResource` (`/disciplinas`, `/professores`, `/horarios`,
+  `/cursos`): read-only catalogs available to `aluno` and `coordenador`
+  for the enrollment screen.
+- Request/response DTOs using Bean Validation, documented with OpenAPI
+  annotations (`@Schema`, `@Operation`, `@APIResponse`).
+
+#### Authorization
+- `@RolesAllowed` via Keycloak realm roles: `coordenador` manages aulas
+  (write), `aluno` and `coordenador` can list/search aulas, and only
+  `aluno` can enroll.
 
 #### Error handling (`exception/`)
-- Centralized `ExceptionMapper`s for business errors, invalid arguments,
-  and validation failures, returning a standardized error payload.
+- Centralized `ExceptionMapper`s for business errors (409), invalid
+  arguments (400), validation failures (400), and missing resources
+  (404), returning a standardized error payload.
+
+#### Tests (`src/test/`)
+- Mockito unit tests for `MatriculaService` and `AulaService` covering the
+  business rules, with no live database required.
+- Quarkus integration suite (`@QuarkusTest`, OIDC disabled, identities via
+  `@TestSecurity`) exercising `AulaResource`, `MatriculaResource`,
+  `CatalogoResource`, RBAC, and enrollment concurrency against a dedicated
+  `desafio_test` database reseeded per test by `TestDataSeeder`.
 
 ### Frontend (`desafio-frontend/`)
 - Angular application bootstrapped with Keycloak integration
@@ -138,11 +166,16 @@ npx nx serve frontend
 ## Next Steps / To-Do
 
 ### Backend
-- [ ] Implement `AulaService` (CRUD with creation/editing rules).
-- [ ] Create REST resources for `Aula` and listing/filtering endpoints.
-- [ ] Protect endpoints with role-based access control (`@RolesAllowed`).
-- [ ] Document endpoints with Swagger/OpenAPI annotations.
-- [ ] Add unit and integration tests (especially enrollment concurrency).
+- [x] Implement `AulaService` (CRUD with creation/editing rules).
+- [x] Create REST resources for `Aula` and listing/filtering endpoints.
+- [x] Protect endpoints with role-based access control (`@RolesAllowed`).
+- [x] Document endpoints with Swagger/OpenAPI annotations.
+- [x] Add unit tests for the business rules.
+- [x] Add integration tests (especially enrollment concurrency) with a
+      test profile / seed data.
+- [x] Expose read-only catalogs (`/disciplinas`, `/professores`,
+      `/horarios`, `/cursos`) and the authenticated student's enrollments
+      (`GET /matriculas`, `GET /matriculas/aulas`).
 
 ### Frontend
 - [ ] Build API services with `HttpClient`.
@@ -152,14 +185,14 @@ npx nx serve frontend
 - [ ] Apply Nx library structure and RxJS patterns.
 
 ### Infrastructure
-- [ ] Configure test containers / test profile for backend integration
-      tests (currently tests require live PostgreSQL + Keycloak).
+- [x] Configure a dedicated `desafio_test` database for backend
+      integration tests (OIDC disabled; still requires live PostgreSQL).
 
 ## CI
 
 GitHub Actions (`ci.yml`) runs on every push/PR to `main` and
-`development`: backend build + unit tests (JDK 21) and frontend
-build + tests (Node.js 22).
+`development`: backend build + unit tests (JDK 21, against a PostgreSQL
+service container) and frontend build + tests (Node.js 22).
 
 ## License
 

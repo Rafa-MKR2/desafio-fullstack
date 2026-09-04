@@ -5,7 +5,10 @@ import com.desafio.entity.Matricula;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -21,12 +24,34 @@ public class MatriculaRepository implements PanacheRepository<Matricula> {
 
     public List<Aula> findAulasByAluno(Long alunoId) {
         return getEntityManager()
-                .createQuery("SELECT m.aula FROM Matricula m WHERE m.aluno.id = :alunoId", Aula.class)
+                .createQuery("SELECT m.aula FROM Matricula m WHERE m.aluno.id = :alunoId ORDER BY m.aula.id", Aula.class)
                 .setParameter("alunoId", alunoId)
                 .getResultList();
     }
 
+    public List<Matricula> listByAluno(Long alunoId) {
+        return list("aluno.id = ?1 order by id", alunoId);
+    }
+
     public long countByAula(Long aulaId) {
         return count("aula.id", aulaId);
+    }
+
+    public Map<Long, Long> countByAulaIds(Collection<Long> aulaIds) {
+        if (aulaIds == null || aulaIds.isEmpty()) {
+            return Map.of();
+        }
+        List<Object[]> rows = getEntityManager()
+                .createQuery(
+                        "SELECT m.aula.id, COUNT(m) FROM Matricula m " +
+                        "WHERE m.aula.id IN :aulaIds GROUP BY m.aula.id",
+                        Object[].class)
+                .setParameter("aulaIds", aulaIds)
+                .getResultList();
+        Map<Long, Long> contagem = new HashMap<>();
+        for (Object[] row : rows) {
+            contagem.put((Long) row[0], ((Number) row[1]).longValue());
+        }
+        return contagem;
     }
 }

@@ -1,22 +1,14 @@
 package com.desafio.dto;
 
 import jakarta.validation.constraints.NotNull;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+@Schema(description = "Dados para matrícula de um aluno em uma aula")
 public class MatriculaRequest {
 
-    @NotNull(message = "alunoId é obrigatório")
-    private Long alunoId;
-
+    @Schema(description = "Id da aula", example = "1")
     @NotNull(message = "aulaId é obrigatório")
     private Long aulaId;
-
-    public Long getAlunoId() {
-        return alunoId;
-    }
-
-    public void setAlunoId(Long alunoId) {
-        this.alunoId = alunoId;
-    }
 
     public Long getAulaId() {
         return aulaId;

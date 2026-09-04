@@ -42,7 +42,9 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build and run unit tests
+      # Executa a suíte completa: unitários (Mockito) + @QuarkusTest
+      # (integração REST com banco dedicado) via surefire.
+      - name: Build and run tests (unit + Quarkus integration)
         env:
           QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://localhost:5432/desafio
           QUARKUS_DATASOURCE_USERNAME: desafio

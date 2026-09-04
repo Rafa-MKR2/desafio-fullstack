@@ -137,7 +137,7 @@
   ],
   "users": [
     {
-      "username": "coordenador1",
+      "username": "coordenador1@email.com",
       "email": "coordenador1@email.com",
       "firstName": "Dr. José",
       "lastName": "Coordenador",
@@ -155,7 +155,7 @@
       ]
     },
     {
-      "username": "coordenador2",
+      "username": "coordenador2@email.com",
       "email": "coordenador2@email.com",
       "firstName": "Profa. Maria",
       "lastName": "Coordenador",
@@ -173,7 +173,7 @@
       ]
     },
     {
-      "username": "coordenador3",
+      "username": "coordenador3@email.com",
       "email": "coordenador3@email.com",
       "firstName": "Dr. Paulo",
       "lastName": "Coordenador",
@@ -191,7 +191,7 @@
       ]
     },
     {
-      "username": "aluno1",
+      "username": "aluno1@email.com",
       "email": "aluno1@email.com",
       "firstName": "João",
       "lastName": "Silva",
@@ -209,7 +209,7 @@
       ]
     },
     {
-      "username": "aluno2",
+      "username": "aluno2@email.com",
       "email": "aluno2@email.com",
       "firstName": "Maria",
       "lastName": "Santos",
@@ -227,7 +227,7 @@
       ]
     },
     {
-      "username": "aluno3",
+      "username": "aluno3@email.com",
       "email": "aluno3@email.com",
       "firstName": "Pedro",
       "lastName": "Costa",
@@ -245,7 +245,7 @@
       ]
     },
     {
-      "username": "aluno4",
+      "username": "aluno4@email.com",
       "email": "aluno4@email.com",
       "firstName": "Ana",
       "lastName": "Oliveira",
@@ -263,7 +263,7 @@
       ]
     },
     {
-      "username": "aluno5",
+      "username": "aluno5@email.com",
       "email": "aluno5@email.com",
       "firstName": "Lucas",
       "lastName": "Pereira",

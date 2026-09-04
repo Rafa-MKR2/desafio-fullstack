@@ -1,5 +1,9 @@
 package com.desafio.dto;
 
+import com.desafio.entity.Matricula;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+@Schema(description = "Matrícula do aluno autenticado")
 public class MatriculaResponse {
 
     private Long id;
@@ -13,6 +17,13 @@ public class MatriculaResponse {
         this.id = id;
         this.alunoId = alunoId;
         this.aulaId = aulaId;
+    }
+
+    public static MatriculaResponse from(Matricula matricula) {
+        return new MatriculaResponse(
+                matricula.getId(),
+                matricula.getAluno().getId(),
+                matricula.getAula().getId());
     }
 
     public Long getId() {

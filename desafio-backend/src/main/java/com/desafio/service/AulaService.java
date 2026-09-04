@@ -5,6 +5,7 @@ import com.desafio.entity.Aula;
 import com.desafio.entity.Disciplina;
 import com.desafio.entity.Horario;
 import com.desafio.entity.Professor;
+import com.desafio.exception.NotFoundException;
 import com.desafio.exception.ProfessorConflitanteException;
 import com.desafio.repository.AulaRepository;
 import com.desafio.repository.DisciplinaRepository;
@@ -15,7 +16,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class AulaService {
@@ -54,7 +57,7 @@ public class AulaService {
     public Aula atualizar(Long aulaId, AulaRequest request) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null) {
-            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
+            throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
 
         validarReferencias(request);
@@ -79,7 +82,7 @@ public class AulaService {
     public void excluir(Long aulaId) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null) {
-            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
+            throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
 
         if (matriculaRepository.countByAula(aulaId) > 0) {
@@ -92,7 +95,7 @@ public class AulaService {
     public Aula buscarPorId(Long aulaId) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null) {
-            throw new IllegalArgumentException("Aula não encontrada: " + aulaId);
+            throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
         return aula;
     }
@@ -101,12 +104,24 @@ public class AulaService {
         return aulaRepository.listAll();
     }
 
+    public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana) {
+        return aulaRepository.listarComFiltros(disciplinaId, professorId, diaSemana);
+    }
+
     public List<Aula> listarPorDisciplina(Long disciplinaId) {
         return aulaRepository.listarPorDisciplina(disciplinaId);
     }
 
     public List<Aula> listarPorProfessor(Long professorId) {
         return aulaRepository.listarPorProfessor(professorId);
+    }
+
+    public long contarMatriculados(Long aulaId) {
+        return matriculaRepository.countByAula(aulaId);
+    }
+
+    public Map<Long, Long> contarMatriculadosPorAula(Collection<Long> aulaIds) {
+        return matriculaRepository.countByAulaIds(aulaIds);
     }
 
     private void validarReferencias(AulaRequest request) {
@@ -123,6 +138,13 @@ public class AulaService {
         Horario horario = horarioRepository.findById(request.getHorarioId());
         if (horario == null) {
             throw new IllegalArgumentException("Horário não encontrado: " + request.getHorarioId());
+        }
+
+        boolean leciona = professor.getDisciplinas().stream()
+                .anyMatch(d -> d.getId().equals(disciplina.getId()));
+        if (!leciona) {
+            throw new IllegalArgumentException(
+                    "Professor não leciona a disciplina informada: " + disciplina.getNome());
         }
     }
 
