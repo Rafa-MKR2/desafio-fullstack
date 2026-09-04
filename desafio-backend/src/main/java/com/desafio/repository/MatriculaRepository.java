@@ -24,13 +24,13 @@ public class MatriculaRepository implements PanacheRepository<Matricula> {
 
     public List<Aula> findAulasByAluno(Long alunoId) {
         return getEntityManager()
-                .createQuery("SELECT m.aula FROM Matricula m WHERE m.aluno.id = :alunoId", Aula.class)
+                .createQuery("SELECT m.aula FROM Matricula m WHERE m.aluno.id = :alunoId ORDER BY m.aula.id", Aula.class)
                 .setParameter("alunoId", alunoId)
                 .getResultList();
     }
 
     public List<Matricula> listByAluno(Long alunoId) {
-        return list("aluno.id", alunoId);
+        return list("aluno.id = ?1 order by id", alunoId);
     }
 
     public long countByAula(Long aulaId) {

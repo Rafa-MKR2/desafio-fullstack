@@ -2,6 +2,7 @@ package com.desafio.repository;
 
 import com.desafio.entity.Aula;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.ArrayList;
@@ -38,9 +39,9 @@ public class AulaRepository implements PanacheRepository<Aula> {
         }
 
         if (clausulas.isEmpty()) {
-            return listAll();
+            return listAll(Sort.by("id"));
         }
-        return list(String.join(" and ", clausulas), params);
+        return list(String.join(" and ", clausulas) + " order by id", params);
     }
 
     public List<Aula> listarPorProfessorMesmoHorario(Long professorId, String diaSemana,

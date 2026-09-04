@@ -8,6 +8,7 @@ import com.desafio.repository.CursoRepository;
 import com.desafio.repository.DisciplinaRepository;
 import com.desafio.repository.HorarioRepository;
 import com.desafio.repository.ProfessorRepository;
+import io.quarkus.panache.common.Sort;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -46,7 +47,7 @@ public class CatalogoResource {
     @APIResponse(responseCode = "200", description = "Lista de disciplinas",
             content = @Content(schema = @Schema(implementation = DisciplinaResponse.class)))
     public List<DisciplinaResponse> listarDisciplinas() {
-        return disciplinaRepository.listAll().stream()
+        return disciplinaRepository.listAll(Sort.by("nome")).stream()
                 .map(DisciplinaResponse::from)
                 .toList();
     }
@@ -57,7 +58,7 @@ public class CatalogoResource {
     @APIResponse(responseCode = "200", description = "Lista de professores",
             content = @Content(schema = @Schema(implementation = ProfessorResponse.class)))
     public List<ProfessorResponse> listarProfessores() {
-        return professorRepository.listAll().stream()
+        return professorRepository.listAll(Sort.by("nome")).stream()
                 .map(ProfessorResponse::from)
                 .toList();
     }
@@ -68,7 +69,9 @@ public class CatalogoResource {
     @APIResponse(responseCode = "200", description = "Lista de horários",
             content = @Content(schema = @Schema(implementation = HorarioResponse.class)))
     public List<HorarioResponse> listarHorarios() {
-        return horarioRepository.listAll().stream()
+        // id preserva a ordem cronológica do seed (Segunda → Sexta);
+        // ordenar por dia_semana (texto em português) seria alfabético
+        return horarioRepository.listAll(Sort.by("id")).stream()
                 .map(HorarioResponse::from)
                 .toList();
     }
@@ -79,7 +82,7 @@ public class CatalogoResource {
     @APIResponse(responseCode = "200", description = "Lista de cursos",
             content = @Content(schema = @Schema(implementation = CursoResponse.class)))
     public List<CursoResponse> listarCursos() {
-        return cursoRepository.listAll().stream()
+        return cursoRepository.listAll(Sort.by("nome")).stream()
                 .map(CursoResponse::from)
                 .toList();
     }
