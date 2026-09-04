@@ -27,6 +27,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "Aulas", description = "Gestão de aulas pelo coordenador e consulta por alunos")
 @Path("/aulas")
@@ -63,9 +64,12 @@ public class AulaResource {
     public List<AulaResponse> listar(@QueryParam("disciplinaId") Long disciplinaId,
                                      @QueryParam("professorId") Long professorId,
                                      @QueryParam("diaSemana") String diaSemana) {
-        return aulaService.listarComFiltros(disciplinaId, professorId, diaSemana)
-                .stream()
-                .map(AulaResponse::from)
+        List<Aula> aulas = aulaService.listarComFiltros(disciplinaId, professorId, diaSemana);
+        Map<Long, Long> matriculados = aulaService.contarMatriculadosPorAula(
+                aulas.stream().map(Aula::getId).toList());
+        return aulas.stream()
+                .map(aula -> AulaResponse.from(aula,
+                        matriculados.getOrDefault(aula.getId(), 0L)))
                 .toList();
     }
 
@@ -78,7 +82,8 @@ public class AulaResource {
             @APIResponse(responseCode = "404", description = "Aula não encontrada")
     })
     public AulaResponse buscar(@PathParam("id") Long id) {
-        return AulaResponse.from(aulaService.buscarPorId(id));
+        Aula aula = aulaService.buscarPorId(id);
+        return AulaResponse.from(aula, aulaService.contarMatriculados(aula.getId()));
     }
 
     @PUT
@@ -94,7 +99,8 @@ public class AulaResource {
             @APIResponse(responseCode = "409", description = "Professor já possui aula no horário informado")
     })
     public AulaResponse atualizar(@PathParam("id") Long id, @Valid AulaRequest request) {
-        return AulaResponse.from(aulaService.atualizar(id, request));
+        Aula aula = aulaService.atualizar(id, request);
+        return AulaResponse.from(aula, aulaService.contarMatriculados(aula.getId()));
     }
 
     @DELETE

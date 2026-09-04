@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -55,6 +56,7 @@ class AulaServiceTest {
         professor = new Professor();
         professor.setId(1L);
         professor.setNome("Ana Paula");
+        professor.setDisciplinas(Set.of(disciplina));
 
         horario = new Horario();
         horario.setId(1L);
@@ -107,6 +109,18 @@ class AulaServiceTest {
     @Test
     void criarComDisciplinaInexistenteLancaIllegalArgumentException() {
         when(disciplinaRepository.findById(1L)).thenReturn(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.criar(request()));
+        verify(aulaRepository, never()).persist(any(Aula.class));
+    }
+
+    @Test
+    void criarComProfessorQueNaoLecionaDisciplinaLancaIllegalArgumentException() {
+        professor.setDisciplinas(Set.of());
+
+        when(disciplinaRepository.findById(1L)).thenReturn(disciplina);
+        when(professorRepository.findById(1L)).thenReturn(professor);
+        when(horarioRepository.findById(1L)).thenReturn(horario);
 
         assertThrows(IllegalArgumentException.class, () -> service.criar(request()));
         verify(aulaRepository, never()).persist(any(Aula.class));

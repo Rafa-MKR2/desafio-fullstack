@@ -16,11 +16,17 @@ public class AulaResponse {
     private String horarioHoraInicio;
     private String horarioHoraFim;
     private Integer vagas;
+    private long vagasOcupadas;
+    private long vagasRestantes;
 
     public AulaResponse() {
     }
 
     public static AulaResponse from(Aula aula) {
+        return from(aula, 0L);
+    }
+
+    public static AulaResponse from(Aula aula, long vagasOcupadas) {
         AulaResponse response = new AulaResponse();
         response.setId(aula.getId());
         response.setDisciplinaId(aula.getDisciplina().getId());
@@ -32,6 +38,8 @@ public class AulaResponse {
         response.setHorarioHoraInicio(aula.getHorario().getHoraInicio());
         response.setHorarioHoraFim(aula.getHorario().getHoraFim());
         response.setVagas(aula.getVagas());
+        response.setVagasOcupadas(vagasOcupadas);
+        response.setVagasRestantes(aula.getVagas() - vagasOcupadas);
         return response;
     }
 
@@ -113,5 +121,21 @@ public class AulaResponse {
 
     public void setVagas(Integer vagas) {
         this.vagas = vagas;
+    }
+
+    public long getVagasOcupadas() {
+        return vagasOcupadas;
+    }
+
+    public void setVagasOcupadas(long vagasOcupadas) {
+        this.vagasOcupadas = vagasOcupadas;
+    }
+
+    public long getVagasRestantes() {
+        return vagasRestantes;
+    }
+
+    public void setVagasRestantes(long vagasRestantes) {
+        this.vagasRestantes = vagasRestantes;
     }
 }

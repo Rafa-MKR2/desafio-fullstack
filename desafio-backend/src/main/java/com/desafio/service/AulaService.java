@@ -16,7 +16,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class AulaService {
@@ -114,6 +116,14 @@ public class AulaService {
         return aulaRepository.listarPorProfessor(professorId);
     }
 
+    public long contarMatriculados(Long aulaId) {
+        return matriculaRepository.countByAula(aulaId);
+    }
+
+    public Map<Long, Long> contarMatriculadosPorAula(Collection<Long> aulaIds) {
+        return matriculaRepository.countByAulaIds(aulaIds);
+    }
+
     private void validarReferencias(AulaRequest request) {
         Disciplina disciplina = disciplinaRepository.findById(request.getDisciplinaId());
         if (disciplina == null) {
@@ -128,6 +138,13 @@ public class AulaService {
         Horario horario = horarioRepository.findById(request.getHorarioId());
         if (horario == null) {
             throw new IllegalArgumentException("Horário não encontrado: " + request.getHorarioId());
+        }
+
+        boolean leciona = professor.getDisciplinas().stream()
+                .anyMatch(d -> d.getId().equals(disciplina.getId()));
+        if (!leciona) {
+            throw new IllegalArgumentException(
+                    "Professor não leciona a disciplina informada: " + disciplina.getNome());
         }
     }
 
