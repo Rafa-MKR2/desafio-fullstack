@@ -41,7 +41,8 @@ public class MatriculaService {
             throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
 
-        if (aula.getVagas() == null || aula.getVagas() <= 0) {
+        long matriculados = matriculaRepository.countByAula(aulaId);
+        if (matriculados >= aula.getVagas()) {
             throw new VagasEsgotadasException("Não há vagas disponíveis para a aula: " + aulaId);
         }
 
@@ -50,9 +51,6 @@ public class MatriculaService {
         }
 
         validarChoqueHorario(alunoId, aula);
-
-        aula.setVagas(aula.getVagas() - 1);
-        aulaRepository.persist(aula);
 
         Matricula matricula = new Matricula();
         matricula.setAluno(aluno);

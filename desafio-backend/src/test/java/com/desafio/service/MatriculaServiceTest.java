@@ -58,15 +58,17 @@ class MatriculaServiceTest {
     }
 
     @Test
-    void matricularComSucessoDecrementaVagasEPersiste() {
+    void matricularComSucessoPersisteMatriculaSemReduzirVagas() {
         when(alunoRepository.findById(1L)).thenReturn(aluno);
         when(aulaRepository.findById(eq(10L), any(LockModeType.class))).thenReturn(aula);
+        when(matriculaRepository.countByAula(10L)).thenReturn(0L);
         when(matriculaRepository.existsByAlunoAndAula(1L, 10L)).thenReturn(false);
         when(matriculaRepository.findAulasByAluno(1L)).thenReturn(List.of());
 
         Matricula matricula = service.matricular(1L, 10L);
 
-        assertEquals(4, aula.getVagas());
+        // vagas é a capacidade total; a ocupação vem da contagem de matrículas.
+        assertEquals(5, aula.getVagas());
         assertEquals(aluno, matricula.getAluno());
         assertEquals(aula, matricula.getAula());
         verify(matriculaRepository).persist(matricula);
@@ -91,9 +93,9 @@ class MatriculaServiceTest {
 
     @Test
     void matricularComVagasEsgotadasLancaVagasEsgotadasException() {
-        aula.setVagas(0);
         when(alunoRepository.findById(1L)).thenReturn(aluno);
         when(aulaRepository.findById(eq(10L), any(LockModeType.class))).thenReturn(aula);
+        when(matriculaRepository.countByAula(10L)).thenReturn(5L);
 
         assertThrows(VagasEsgotadasException.class, () -> service.matricular(1L, 10L));
         verify(matriculaRepository, never()).persist(any(Matricula.class));
@@ -136,13 +138,14 @@ class MatriculaServiceTest {
 
         when(alunoRepository.findById(1L)).thenReturn(aluno);
         when(aulaRepository.findById(eq(10L), any(LockModeType.class))).thenReturn(aula);
+        when(matriculaRepository.countByAula(10L)).thenReturn(0L);
         when(matriculaRepository.existsByAlunoAndAula(1L, 10L)).thenReturn(false);
         when(matriculaRepository.findAulasByAluno(1L)).thenReturn(List.of(aulaOutroDia));
 
         Matricula matricula = service.matricular(1L, 10L);
 
         assertNotNull(matricula);
-        assertEquals(4, aula.getVagas());
+        assertEquals(5, aula.getVagas());
         verify(matriculaRepository).persist(matricula);
     }
 

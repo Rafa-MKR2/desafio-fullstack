@@ -1,7 +1,10 @@
 -- ============================================================
--- Cria o database do Keycloak (executa dentro do database "desafio")
+-- Cria os databases auxiliares (executa dentro do database "desafio")
 SELECT 'CREATE DATABASE keycloak'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'keycloak')\gexec
+
+SELECT 'CREATE DATABASE desafio_test'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'desafio_test')\gexec
 
 -- ============================================================
 -- init.sql - Dados seed do Desafio
