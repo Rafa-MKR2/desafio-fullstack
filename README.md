@@ -5,8 +5,9 @@ professors, schedules, coordinators, and students, secured with Keycloak.
 
 > **Status:** in progress. Infrastructure, identity, database schema,
 > backend domain model, enrollment and aula business logic, REST
-> resources, role-based authorization, and unit tests are in place.
-> Integration tests and the Angular UI are still to be implemented.
+> resources (including read-only catalogs and "my enrollments" for
+> students), role-based authorization, and unit + integration tests are
+> in place. The Angular UI is still to be implemented.
 
 ## Architecture
 
@@ -71,11 +72,16 @@ desafio-fullstack/
   and delete protection when enrollments exist.
 
 #### API (`resource/`, `dto/`)
-- `MatriculaResource` (`POST /matriculas`) for the authenticated student,
-  resolved from the JWT (`preferred_username` → e-mail), so students can
-  only enroll themselves.
+- `MatriculaResource` (`/matriculas`): `POST` enrolls the authenticated
+  student, resolved from the JWT (`preferred_username` → e-mail), so
+  students can only enroll themselves; `GET` lists the student's own
+  enrollments and `GET /aulas` lists the aulas they are enrolled in
+  (with occupancy).
 - `AulaResource` (`/aulas`): `POST`, `GET` (with `disciplinaId`,
   `professorId`, `diaSemana` filters), `GET/{id}`, `PUT/{id}`, `DELETE/{id}`.
+- `CatalogoResource` (`/disciplinas`, `/professores`, `/horarios`,
+  `/cursos`): read-only catalogs available to `aluno` and `coordenador`
+  for the enrollment screen.
 - Request/response DTOs using Bean Validation, documented with OpenAPI
   annotations (`@Schema`, `@Operation`, `@APIResponse`).
 
@@ -91,7 +97,11 @@ desafio-fullstack/
 
 #### Tests (`src/test/`)
 - Mockito unit tests for `MatriculaService` and `AulaService` covering the
-  business rules (16 tests), with no live database required.
+  business rules, with no live database required.
+- Quarkus integration suite (`@QuarkusTest`, OIDC disabled, identities via
+  `@TestSecurity`) exercising `AulaResource`, `MatriculaResource`,
+  `CatalogoResource`, RBAC, and enrollment concurrency against a dedicated
+  `desafio_test` database reseeded per test by `TestDataSeeder`.
 
 ### Frontend (`desafio-frontend/`)
 - Angular application bootstrapped with Keycloak integration
@@ -161,8 +171,11 @@ npx nx serve frontend
 - [x] Protect endpoints with role-based access control (`@RolesAllowed`).
 - [x] Document endpoints with Swagger/OpenAPI annotations.
 - [x] Add unit tests for the business rules.
-- [ ] Add integration tests (especially enrollment concurrency) with a
+- [x] Add integration tests (especially enrollment concurrency) with a
       test profile / seed data.
+- [x] Expose read-only catalogs (`/disciplinas`, `/professores`,
+      `/horarios`, `/cursos`) and the authenticated student's enrollments
+      (`GET /matriculas`, `GET /matriculas/aulas`).
 
 ### Frontend
 - [ ] Build API services with `HttpClient`.
@@ -172,8 +185,8 @@ npx nx serve frontend
 - [ ] Apply Nx library structure and RxJS patterns.
 
 ### Infrastructure
-- [ ] Configure test containers / test profile for backend integration
-      tests (currently tests require live PostgreSQL + Keycloak).
+- [x] Configure a dedicated `desafio_test` database for backend
+      integration tests (OIDC disabled; still requires live PostgreSQL).
 
 ## CI
 
