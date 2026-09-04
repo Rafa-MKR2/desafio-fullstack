@@ -17,6 +17,20 @@ jobs:
     defaults:
       run:
         working-directory: desafio-backend
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: desafio
+          POSTGRES_PASSWORD: desafio123
+          POSTGRES_DB: desafio
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U desafio"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,6 +43,10 @@ jobs:
           cache: maven
 
       - name: Build and run unit tests
+        env:
+          QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://localhost:5432/desafio
+          QUARKUS_DATASOURCE_USERNAME: desafio
+          QUARKUS_DATASOURCE_PASSWORD: desafio123
         run: ./mvnw -B clean verify -DskipITs
 
   frontend:

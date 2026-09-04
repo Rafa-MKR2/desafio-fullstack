@@ -13,4 +13,8 @@ Thumbs.db
 # Local environment
 .env
 
+# Local documentation (not tracked)
+docs-local/
+ROADMAP.MD
+
 # Build artifacts covered by per-project .gitignore files

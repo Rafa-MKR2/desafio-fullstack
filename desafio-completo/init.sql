@@ -11,43 +11,64 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'keycloak')\gexec
 
 -- Schema (criado de forma idempotente, também gerido pelo Hibernate)
 CREATE TABLE IF NOT EXISTS disciplina (
-    id             BIGINT PRIMARY KEY,
+    id             BIGSERIAL PRIMARY KEY,
     nome           VARCHAR(255) NOT NULL,
     carga_horaria  INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS professor (
-    id          BIGINT PRIMARY KEY,
-    nome        VARCHAR(255) NOT NULL,
-    disciplinas VARCHAR(500)
+    id          BIGSERIAL PRIMARY KEY,
+    nome        VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS professor_disciplina (
+    professor_id  BIGINT NOT NULL REFERENCES professor(id),
+    disciplina_id BIGINT NOT NULL REFERENCES disciplina(id),
+    PRIMARY KEY (professor_id, disciplina_id)
 );
 
 CREATE TABLE IF NOT EXISTS horario (
-    id           BIGINT PRIMARY KEY,
+    id           BIGSERIAL PRIMARY KEY,
     dia_semana   VARCHAR(20),
     hora_inicio  VARCHAR(5),
     hora_fim     VARCHAR(5)
 );
 
 CREATE TABLE IF NOT EXISTS curso (
-    id   BIGINT PRIMARY KEY,
+    id   BIGSERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS coordenador (
-    id       BIGINT PRIMARY KEY,
+    id       BIGSERIAL PRIMARY KEY,
     nome     VARCHAR(255) NOT NULL,
     email    VARCHAR(255),
     area     VARCHAR(255),
-    curso_id BIGINT
+    curso_id BIGINT REFERENCES curso(id)
 );
 
 CREATE TABLE IF NOT EXISTS aluno (
-    id        BIGINT PRIMARY KEY,
+    id        BIGSERIAL PRIMARY KEY,
     nome      VARCHAR(255) NOT NULL,
     email     VARCHAR(255),
-    curso_id  BIGINT,
+    curso_id  BIGINT REFERENCES curso(id),
     matricula VARCHAR(50)
+);
+
+CREATE TABLE IF NOT EXISTS aula (
+    id            BIGSERIAL PRIMARY KEY,
+    disciplina_id BIGINT NOT NULL REFERENCES disciplina(id),
+    professor_id  BIGINT NOT NULL REFERENCES professor(id),
+    horario_id    BIGINT NOT NULL REFERENCES horario(id),
+    vagas         INTEGER NOT NULL,
+    version       BIGINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS matricula (
+    id       BIGSERIAL PRIMARY KEY,
+    aluno_id BIGINT NOT NULL REFERENCES aluno(id),
+    aula_id  BIGINT NOT NULL REFERENCES aula(id),
+    CONSTRAINT matricula_aluno_aula_unique UNIQUE (aluno_id, aula_id)
 );
 
 -- Disciplinas (15)
@@ -69,12 +90,20 @@ INSERT INTO disciplina (id, nome, carga_horaria) VALUES
   (15, 'Empreendedorismo',    40);
 
 -- Professores (5)
-INSERT INTO professor (id, nome, disciplinas) VALUES
-  (1, 'Ana Paula',      'Matemática'),
-  (2, 'Carlos Alberto', 'Português, História'),
-  (3, 'Mariana Costa',  'Física, Química'),
-  (4, 'Roberto Silva',  'Biologia, Geografia'),
-  (5, 'Fernanda Lima',  'Inglês, Espanhol');
+INSERT INTO professor (id, nome) VALUES
+  (1, 'Ana Paula'),
+  (2, 'Carlos Alberto'),
+  (3, 'Mariana Costa'),
+  (4, 'Roberto Silva'),
+  (5, 'Fernanda Lima');
+
+-- Relacionamento Professor <-> Disciplina
+INSERT INTO professor_disciplina (professor_id, disciplina_id) VALUES
+  (1, 1),
+  (2, 2), (2, 3),
+  (3, 5), (3, 6),
+  (4, 7), (4, 4),
+  (5, 8), (5, 9);
 
 -- Horários (9)
 INSERT INTO horario (id, dia_semana, hora_inicio, hora_fim) VALUES
@@ -113,3 +142,11 @@ INSERT INTO aluno (id, nome, email, curso_id, matricula) VALUES
   (3, 'Pedro Costa',    'aluno3@email.com', 2, '20240003'),
   (4, 'Ana Oliveira',   'aluno4@email.com', 5, '20240004'),
   (5, 'Lucas Pereira',  'aluno5@email.com', 9, '20240005');
+
+-- Restaura sequências após inserir IDs explícitos
+SELECT setval(pg_get_serial_sequence('disciplina', 'id'), (SELECT MAX(id) FROM disciplina));
+SELECT setval(pg_get_serial_sequence('professor', 'id'), (SELECT MAX(id) FROM professor));
+SELECT setval(pg_get_serial_sequence('horario', 'id'), (SELECT MAX(id) FROM horario));
+SELECT setval(pg_get_serial_sequence('curso', 'id'), (SELECT MAX(id) FROM curso));
+SELECT setval(pg_get_serial_sequence('coordenador', 'id'), (SELECT MAX(id) FROM coordenador));
+SELECT setval(pg_get_serial_sequence('aluno', 'id'), (SELECT MAX(id) FROM aluno));
