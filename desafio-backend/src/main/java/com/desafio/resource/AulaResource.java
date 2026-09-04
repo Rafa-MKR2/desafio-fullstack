@@ -4,6 +4,7 @@ import com.desafio.dto.AulaRequest;
 import com.desafio.dto.AulaResponse;
 import com.desafio.entity.Aula;
 import com.desafio.service.AulaService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -24,12 +25,14 @@ import java.util.List;
 @Path("/aulas")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed({"aluno", "coordenador"})
 public class AulaResource {
 
     @Inject
     AulaService aulaService;
 
     @POST
+    @RolesAllowed("coordenador")
     public Response criar(@Valid AulaRequest request) {
         Aula aula = aulaService.criar(request);
         return Response.created(URI.create("/aulas/" + aula.getId()))
@@ -55,12 +58,14 @@ public class AulaResource {
 
     @PUT
     @Path("/{id}")
+    @RolesAllowed("coordenador")
     public AulaResponse atualizar(@PathParam("id") Long id, @Valid AulaRequest request) {
         return AulaResponse.from(aulaService.atualizar(id, request));
     }
 
     @DELETE
     @Path("/{id}")
+    @RolesAllowed("coordenador")
     public Response excluir(@PathParam("id") Long id) {
         aulaService.excluir(id);
         return Response.noContent().build();
