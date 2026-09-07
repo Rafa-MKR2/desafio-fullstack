@@ -5,7 +5,9 @@ import {
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import {
+  AutoRefreshTokenService,
   INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
+  UserActivityService,
   includeBearerTokenInterceptor,
   provideKeycloak,
   withAutoRefreshToken,
@@ -40,6 +42,8 @@ export const appConfig: ApplicationConfig = {
         silentCheckSsoRedirectUri: environment.keycloak.silentCheckSsoRedirectUri,
       },
       features: [withAutoRefreshToken()],
+      // Dependências do withAutoRefreshToken (exigidas pelo keycloak-angular v22).
+      providers: [AutoRefreshTokenService, UserActivityService],
     }),
   ],
 };
