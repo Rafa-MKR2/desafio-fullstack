@@ -2,49 +2,27 @@
   display: block;
 }
 
-.painel {
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) 2fr;
-  gap: 1.25rem;
-  align-items: start;
-}
-
-@media (max-width: 900px) {
-  .painel {
-    grid-template-columns: 1fr;
-  }
-}
-
-.cartao h2 {
-  margin-top: 0;
-  font-size: 1.05rem;
-}
-
-.vazio {
-  color: var(--cor-texto-suave);
-  font-size: 0.95rem;
-}
-
 /* ---- Avisos ---- */
 .aviso {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.25rem;
-  font-size: 0.95rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--raio-pequeno);
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+  font-weight: 500;
 }
 
 .aviso-sucesso {
-  background: #ecfdf5;
+  background: var(--cor-sucesso-suave);
   border: 1px solid #a7f3d0;
   color: #065f46;
 }
 
 .aviso-erro {
-  background: #fef2f2;
+  background: var(--cor-erro-suave);
   border: 1px solid #fecaca;
   color: #991b1b;
 }
@@ -52,129 +30,37 @@
 .aviso-fechar {
   border: none;
   background: transparent;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
   color: inherit;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.aviso-fechar:hover {
+  opacity: 1;
 }
 
 .aviso-erro-texto {
   color: #991b1b;
 }
 
-/* ---- Minhas aulas ---- */
-.lista-minhas {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.lista-minhas li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border: 1px solid var(--borda);
-  border-radius: 8px;
-  padding: 0.65rem 0.8rem;
-  background: var(--cor-fundo);
-}
-
-.lista-minhas-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.lista-minhas-info span {
-  font-size: 0.85rem;
+.vazio {
   color: var(--cor-texto-suave);
+  font-size: 0.95rem;
+  padding: 1rem 0;
 }
 
-/* ---- Selos ---- */
-.selo {
-  display: inline-block;
-  border-radius: 999px;
-  padding: 0.2rem 0.7rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  white-space: nowrap;
-  background: var(--cor-fundo);
-  border: 1px solid var(--borda);
+/* ---- Tabela: células específicas ---- */
+.disciplina-nome {
+  font-size: 0.93rem;
+}
+
+.horario {
   color: var(--cor-texto-suave);
-}
-
-.selo-ok {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-  color: #065f46;
-}
-
-.selo-lotada {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #991b1b;
-}
-
-/* ---- Filtros ---- */
-.filtros {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.9rem;
-  margin-bottom: 1.1rem;
-}
-
-.filtro {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--cor-texto-suave);
-}
-
-.filtro select {
-  min-width: 170px;
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--borda);
-  border-radius: 6px;
-  background: var(--cor-superficie);
-  font: inherit;
-  color: var(--cor-texto);
-}
-
-/* ---- Tabela ---- */
-.tabela-rolagem {
-  overflow-x: auto;
-}
-
-.tabela {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.92rem;
-}
-
-.tabela th,
-.tabela td {
-  text-align: left;
-  padding: 0.6rem 0.7rem;
-  border-bottom: 1px solid var(--borda);
-  vertical-align: middle;
-}
-
-.tabela thead th {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--cor-texto-suave);
-}
-
-.tabela tbody tr:last-child td {
-  border-bottom: none;
+  margin-left: 0.4rem;
+  font-size: 0.88rem;
 }
 
 .col-acao {
@@ -182,15 +68,38 @@
   white-space: nowrap;
 }
 
+.ocupacao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 120px;
+}
+
+.barra {
+  height: 6px;
+  max-width: 160px;
+  background: #eef0f5;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barra-preenchimento {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cor-primaria);
+  transition: width 0.3s ease;
+}
+
+.barra-preenchimento.barra-lotada {
+  background: var(--cor-erro);
+}
+
 .vagas {
   font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .vagas-lotada {
-  color: #991b1b;
-}
-
-.vagas-restantes {
-  color: var(--cor-texto-suave);
-  font-size: 0.8rem;
+  color: var(--cor-erro);
 }

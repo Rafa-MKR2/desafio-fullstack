@@ -64,6 +64,16 @@ export class GestaoAulasComponent implements OnInit {
   formHorarioId = signal<number | null>(null);
   formVagas = signal<number | null>(null);
 
+  /** Total de vagas oferecidas nas aulas listadas. */
+  readonly vagasTotais = computed(() =>
+    this.aulas().reduce((soma, a) => soma + a.vagas, 0),
+  );
+
+  /** Total de vagas ocupadas nas aulas listadas. */
+  readonly vagasOcupadasTotais = computed(() =>
+    this.aulas().reduce((soma, a) => soma + a.vagasOcupadas, 0),
+  );
+
   /** Professores que lecionam a disciplina selecionada no formulário. */
   readonly professoresDaDisciplina = computed(() => {
     const disciplinaId = this.formDisciplinaId();
@@ -261,6 +271,14 @@ export class GestaoAulasComponent implements OnInit {
 
   fecharMensagem(): void {
     this.mensagem.set(null);
+  }
+
+  /** Porcentagem de ocupação de uma aula (0–100), para a barra de vagas. */
+  porcentagemOcupada(aula: Aula): number {
+    if (aula.vagas <= 0) {
+      return 0;
+    }
+    return Math.round((aula.vagasOcupadas / aula.vagas) * 100);
   }
 
   private textoDeErro(erro: unknown): string {

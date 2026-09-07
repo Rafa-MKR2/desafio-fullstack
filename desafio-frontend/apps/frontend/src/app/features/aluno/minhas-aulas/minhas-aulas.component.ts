@@ -47,6 +47,11 @@ export class MinhasAulasComponent implements OnInit {
   /** Ids das aulas em que o aluno já está matriculado. */
   readonly idsMatriculadas = computed(() => new Set(this.minhasAulas().map((a) => a.id)));
 
+  /** Quantas aulas disponíveis (com filtros aplicados) ainda têm vagas. */
+  readonly aulasComVaga = computed(
+    () => this.aulas().filter((a) => a.vagasRestantes > 0).length,
+  );
+
   ngOnInit(): void {
     this.carregarCatalogos();
     this.carregarMinhasAulas();
@@ -153,6 +158,14 @@ export class MinhasAulasComponent implements OnInit {
 
   fecharMensagem(): void {
     this.mensagem.set(null);
+  }
+
+  /** Porcentagem de ocupação de uma aula (0–100), para a barra de vagas. */
+  porcentagemOcupada(aula: Aula): number {
+    if (aula.vagas <= 0) {
+      return 0;
+    }
+    return Math.round((aula.vagasOcupadas / aula.vagas) * 100);
   }
 
   private textoDeErro(erro: unknown): string {

@@ -1,5 +1,16 @@
 <section class="pagina">
-  <h1>Matrícula em aulas</h1>
+  <header class="cabecalho-pagina">
+    <div class="titulo">
+      <span class="icone-tela" aria-hidden="true">📘</span>
+      <div>
+        <h1>Minhas aulas</h1>
+        <p class="subtitulo">
+          {{ minhasAulas().length }} matriculada{{ minhasAulas().length === 1 ? '' : 's' }}
+          · {{ aulasComVaga() }} com vagas disponíveis
+        </p>
+      </div>
+    </div>
+  </header>
 
   @if (mensagem(); as msg) {
     <div
@@ -8,46 +19,19 @@
       [class.aviso-erro]="msg.tipo === 'erro'"
       role="status"
     >
-      {{ msg.texto }}
+      <span class="aviso-texto">{{ msg.texto }}</span>
       <button class="aviso-fechar" type="button" aria-label="Fechar aviso" (click)="fecharMensagem()">
         ×
       </button>
     </div>
   }
 
-  <div class="painel">
-    <section class="cartao">
-      <h2>Minhas aulas ({{ minhasAulas().length }})</h2>
-      @if (minhasAulas().length === 0) {
-        <p class="vazio">
-          Você ainda não está matriculado(a) em nenhuma aula. Escolha uma aula
-          disponível ao lado e clique em <strong>Matricular</strong>.
-        </p>
-      } @else {
-        <ul class="lista-minhas">
-          @for (aula of minhasAulas(); track aula.id) {
-            <li>
-              <div class="lista-minhas-info">
-                <strong>{{ aula.disciplinaNome }}</strong>
-                <span>
-                  {{ aula.professorNome }} · {{ aula.horarioDiaSemana }},
-                  {{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}
-                </span>
-              </div>
-              <span class="selo selo-ok">Matriculado</span>
-            </li>
-          }
-        </ul>
-      }
-    </section>
-
-    <section class="cartao">
-      <h2>Aulas disponíveis</h2>
-
-      <div class="filtros">
-        <label class="filtro">
+  <section class="cartao">
+    <div class="toolbar">
+      <div class="toolbar-filtros">
+        <label class="campo-label">
           Disciplina
-          <select [ngModel]="filtroDisciplinaId()" (ngModelChange)="mudarFiltroDisciplina($event)">
+          <select class="campo-select" [ngModel]="filtroDisciplinaId()" (ngModelChange)="mudarFiltroDisciplina($event)">
             <option [ngValue]="null">Todas</option>
             @for (d of disciplinas(); track d.id) {
               <option [ngValue]="d.id">{{ d.nome }}</option>
@@ -55,9 +39,9 @@
           </select>
         </label>
 
-        <label class="filtro">
+        <label class="campo-label">
           Professor
-          <select [ngModel]="filtroProfessorId()" (ngModelChange)="mudarFiltroProfessor($event)">
+          <select class="campo-select" [ngModel]="filtroProfessorId()" (ngModelChange)="mudarFiltroProfessor($event)">
             <option [ngValue]="null">Todos</option>
             @for (p of professores(); track p.id) {
               <option [ngValue]="p.id">{{ p.nome }}</option>
@@ -65,76 +49,84 @@
           </select>
         </label>
 
-        <label class="filtro">
+        <label class="campo-label">
           Dia da semana
-          <select [ngModel]="filtroDia()" (ngModelChange)="mudarFiltroDia($event)">
+          <select class="campo-select" [ngModel]="filtroDia()" (ngModelChange)="mudarFiltroDia($event)">
             <option [ngValue]="null">Todos</option>
             @for (dia of dias(); track dia) {
               <option [ngValue]="dia">{{ dia }}</option>
             }
           </select>
         </label>
-
-        <button class="botao" type="button" (click)="limparFiltros()">Limpar filtros</button>
       </div>
 
-      @if (carregando()) {
-        <p class="vazio">Carregando aulas…</p>
-      } @else if (erroLista()) {
-        <p class="vazio aviso-erro-texto">{{ erroLista() }}</p>
-      } @else if (aulas().length === 0) {
-        <p class="vazio">Nenhuma aula encontrada com os filtros atuais.</p>
-      } @else {
-        <div class="tabela-rolagem">
-          <table class="tabela">
-            <thead>
+      <button class="botao botao-variavel" type="button" (click)="limparFiltros()">Limpar filtros</button>
+    </div>
+
+    @if (carregando()) {
+      <p class="vazio">Carregando aulas…</p>
+    } @else if (erroLista()) {
+      <p class="vazio aviso-erro-texto">{{ erroLista() }}</p>
+    } @else if (aulas().length === 0) {
+      <p class="vazio">Nenhuma aula encontrada com os filtros atuais.</p>
+    } @else {
+      <div class="tabela-rolagem">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th>Disciplina</th>
+              <th>Professor</th>
+              <th>Dia · Horário</th>
+              <th>Vagas</th>
+              <th class="col-acao">Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (aula of aulas(); track aula.id) {
               <tr>
-                <th>Disciplina</th>
-                <th>Professor</th>
-                <th>Horário</th>
-                <th>Vagas</th>
-                <th class="col-acao">Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (aula of aulas(); track aula.id) {
-                <tr>
-                  <td>{{ aula.disciplinaNome }}</td>
-                  <td>{{ aula.professorNome }}</td>
-                  <td>
-                    {{ aula.horarioDiaSemana }},
-                    {{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}
-                  </td>
-                  <td>
+                <td>
+                  <strong class="disciplina-nome">{{ aula.disciplinaNome }}</strong>
+                </td>
+                <td>{{ aula.professorNome }}</td>
+                <td>
+                  <span class="selo selo-dia">{{ aula.horarioDiaSemana }}</span>
+                  <span class="horario">{{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}</span>
+                </td>
+                <td>
+                  <div class="ocupacao">
+                    <div class="barra">
+                      <span
+                        class="barra-preenchimento"
+                        [class.barra-lotada]="aula.vagasRestantes === 0"
+                        [style.width.%]="porcentagemOcupada(aula)"
+                      ></span>
+                    </div>
                     <span class="vagas" [class.vagas-lotada]="aula.vagasRestantes === 0">
-                      {{ aula.vagasOcupadas }}/{{ aula.vagas }}
+                      {{ aula.vagasOcupadas }}/{{ aula.vagas }} vagas
                     </span>
-                    @if (aula.vagasRestantes > 0) {
-                      <small class="vagas-restantes">({{ aula.vagasRestantes }} restante{{ aula.vagasRestantes === 1 ? '' : 's' }})</small>
-                    }
-                  </td>
-                  <td class="col-acao">
-                    @if (idsMatriculadas().has(aula.id)) {
-                      <span class="selo">Já matriculado</span>
-                    } @else if (aula.vagasRestantes === 0) {
-                      <span class="selo selo-lotada">Lotada</span>
-                    } @else {
-                      <button
-                        class="botao botao-primario"
-                        type="button"
-                        (click)="matricular(aula)"
-                        [disabled]="matriculaPendenteId() !== null"
-                      >
-                        {{ matriculaPendenteId() === aula.id ? 'Matriculando…' : 'Matricular' }}
-                      </button>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    </section>
-  </div>
+                  </div>
+                </td>
+                <td class="col-acao">
+                  @if (idsMatriculadas().has(aula.id)) {
+                    <span class="selo selo-ok">Já matriculado</span>
+                  } @else if (aula.vagasRestantes === 0) {
+                    <span class="selo selo-lotada">Lotada</span>
+                  } @else {
+                    <button
+                      class="botao botao-primario"
+                      type="button"
+                      (click)="matricular(aula)"
+                      [disabled]="matriculaPendenteId() !== null"
+                    >
+                      {{ matriculaPendenteId() === aula.id ? 'Matriculando…' : 'Matricular' }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 </section>
