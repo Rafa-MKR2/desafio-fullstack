@@ -11,7 +11,10 @@
       </div>
     </div>
     <button class="botao botao-primario" type="button" (click)="abrirNovo()">
-      + Nova aula
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Nova aula
     </button>
   </header>
 
@@ -87,7 +90,14 @@
           (click)="salvar()"
           [disabled]="salvando()"
         >
-          {{ salvando() ? 'Salvando…' : (aulaEditando() ? 'Salvar alterações' : 'Criar aula') }}
+          @if (salvando()) {
+            Salvando…
+          } @else {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+            {{ aulaEditando() ? 'Salvar alterações' : 'Criar aula' }}
+          }
         </button>
         <button class="botao" type="button" (click)="cancelar()">Cancelar</button>
       </div>
@@ -128,7 +138,12 @@
         </label>
       </div>
 
-      <button class="botao" type="button" (click)="limparFiltros()">Limpar filtros</button>
+      <button class="botao" type="button" (click)="limparFiltros()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18M6 12h12M10 18h4" />
+        </svg>
+        Limpar filtros
+      </button>
     </div>
 
     @if (carregando()) {
@@ -176,6 +191,9 @@
                 </td>
                 <td class="col-acao">
                   <button class="botao botao-acao" type="button" (click)="editar(aula)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                    </svg>
                     Editar
                   </button>
                   @if (exclusaoPendenteId() === aula.id) {
@@ -184,6 +202,9 @@
                     </button>
                   } @else {
                     <button class="botao botao-acao botao-excluir" type="button" (click)="excluir(aula)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                      </svg>
                       Excluir
                     </button>
                   }
