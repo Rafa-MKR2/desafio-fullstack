@@ -1,5 +1,22 @@
 <section class="pagina">
-  <h1>Gestão de aulas</h1>
+  <header class="cabecalho-pagina">
+    <div class="titulo">
+      <span class="icone-tela" aria-hidden="true">🗂️</span>
+      <div>
+        <h1>Gestão de aulas</h1>
+        <p class="subtitulo">
+          {{ aulas().length }} aula{{ aulas().length === 1 ? '' : 's' }}
+          · {{ vagasOcupadasTotais() }} de {{ vagasTotais() }} vagas ocupadas
+        </p>
+      </div>
+    </div>
+    <button class="botao botao-primario" type="button" (click)="abrirNovo()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Nova aula
+    </button>
+  </header>
 
   @if (mensagem(); as msg) {
     <div
@@ -8,29 +25,20 @@
       [class.aviso-erro]="msg.tipo === 'erro'"
       role="status"
     >
-      {{ msg.texto }}
+      <span class="aviso-texto">{{ msg.texto }}</span>
       <button class="aviso-fechar" type="button" aria-label="Fechar aviso" (click)="fecharMensagem()">
         ×
       </button>
     </div>
   }
 
-  <div class="acoes">
-    <button class="botao botao-primario" type="button" (click)="abrirNovo()">
-      + Nova aula
-    </button>
-  </div>
-
   @if (formAberto()) {
     <section class="cartao formulario">
-      <h2>{{ aulaEditando() ? 'Editar aula' : 'Nova aula' }}</h2>
+      <h2 class="formulario-titulo">{{ aulaEditando() ? 'Editar aula' : 'Nova aula' }}</h2>
       <div class="formulario-campos">
-        <label class="campo">
+        <label class="campo-label">
           Disciplina
-          <select
-            [ngModel]="formDisciplinaId()"
-            (ngModelChange)="mudarFormDisciplina($event)"
-          >
+          <select class="campo-select" [ngModel]="formDisciplinaId()" (ngModelChange)="mudarFormDisciplina($event)">
             <option [ngValue]="null" disabled>Selecione…</option>
             @for (d of disciplinas(); track d.id) {
               <option [ngValue]="d.id">{{ d.nome }}</option>
@@ -38,12 +46,9 @@
           </select>
         </label>
 
-        <label class="campo">
+        <label class="campo-label">
           Professor
-          <select
-            [ngModel]="formProfessorId()"
-            (ngModelChange)="formProfessorId.set($event)"
-          >
+          <select class="campo-select" [ngModel]="formProfessorId()" (ngModelChange)="formProfessorId.set($event)">
             <option [ngValue]="null" disabled>Selecione…</option>
             @for (p of professoresDaDisciplina(); track p.id) {
               <option [ngValue]="p.id">{{ p.nome }}</option>
@@ -54,12 +59,9 @@
           }
         </label>
 
-        <label class="campo">
+        <label class="campo-label">
           Horário
-          <select
-            [ngModel]="formHorarioId()"
-            (ngModelChange)="formHorarioId.set($event)"
-          >
+          <select class="campo-select" [ngModel]="formHorarioId()" (ngModelChange)="formHorarioId.set($event)">
             <option [ngValue]="null" disabled>Selecione…</option>
             @for (h of horarios(); track h.id) {
               <option [ngValue]="h.id">
@@ -69,9 +71,10 @@
           </select>
         </label>
 
-        <label class="campo">
+        <label class="campo-label">
           Vagas
           <input
+            class="campo-input"
             type="number"
             min="1"
             step="1"
@@ -87,7 +90,14 @@
           (click)="salvar()"
           [disabled]="salvando()"
         >
-          {{ salvando() ? 'Salvando…' : (aulaEditando() ? 'Salvar alterações' : 'Criar aula') }}
+          @if (salvando()) {
+            Salvando…
+          } @else {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+            {{ aulaEditando() ? 'Salvar alterações' : 'Criar aula' }}
+          }
         </button>
         <button class="botao" type="button" (click)="cancelar()">Cancelar</button>
       </div>
@@ -95,40 +105,45 @@
   }
 
   <section class="cartao">
-    <h2>Aulas ({{ aulas().length }})</h2>
+    <div class="toolbar">
+      <div class="toolbar-filtros">
+        <label class="campo-label">
+          Disciplina
+          <select class="campo-select" [ngModel]="filtroDisciplinaId()" (ngModelChange)="mudarFiltroDisciplina($event)">
+            <option [ngValue]="null">Todas</option>
+            @for (d of disciplinas(); track d.id) {
+              <option [ngValue]="d.id">{{ d.nome }}</option>
+            }
+          </select>
+        </label>
 
-    <div class="filtros">
-      <label class="filtro">
-        Disciplina
-        <select [ngModel]="filtroDisciplinaId()" (ngModelChange)="mudarFiltroDisciplina($event)">
-          <option [ngValue]="null">Todas</option>
-          @for (d of disciplinas(); track d.id) {
-            <option [ngValue]="d.id">{{ d.nome }}</option>
-          }
-        </select>
-      </label>
+        <label class="campo-label">
+          Professor
+          <select class="campo-select" [ngModel]="filtroProfessorId()" (ngModelChange)="mudarFiltroProfessor($event)">
+            <option [ngValue]="null">Todos</option>
+            @for (p of professores(); track p.id) {
+              <option [ngValue]="p.id">{{ p.nome }}</option>
+            }
+          </select>
+        </label>
 
-      <label class="filtro">
-        Professor
-        <select [ngModel]="filtroProfessorId()" (ngModelChange)="mudarFiltroProfessor($event)">
-          <option [ngValue]="null">Todos</option>
-          @for (p of professores(); track p.id) {
-            <option [ngValue]="p.id">{{ p.nome }}</option>
-          }
-        </select>
-      </label>
+        <label class="campo-label">
+          Dia da semana
+          <select class="campo-select" [ngModel]="filtroDia()" (ngModelChange)="mudarFiltroDia($event)">
+            <option [ngValue]="null">Todos</option>
+            @for (dia of dias(); track dia) {
+              <option [ngValue]="dia">{{ dia }}</option>
+            }
+          </select>
+        </label>
+      </div>
 
-      <label class="filtro">
-        Dia da semana
-        <select [ngModel]="filtroDia()" (ngModelChange)="mudarFiltroDia($event)">
-          <option [ngValue]="null">Todos</option>
-          @for (dia of dias(); track dia) {
-            <option [ngValue]="dia">{{ dia }}</option>
-          }
-        </select>
-      </label>
-
-      <button class="botao" type="button" (click)="limparFiltros()">Limpar filtros</button>
+      <button class="botao" type="button" (click)="limparFiltros()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18M6 12h12M10 18h4" />
+        </svg>
+        Limpar filtros
+      </button>
     </div>
 
     @if (carregando()) {
@@ -144,7 +159,7 @@
             <tr>
               <th>Disciplina</th>
               <th>Professor</th>
-              <th>Horário</th>
+              <th>Dia · Horário</th>
               <th>Vagas</th>
               <th class="col-acao">Ações</th>
             </tr>
@@ -152,24 +167,33 @@
           <tbody>
             @for (aula of aulas(); track aula.id) {
               <tr>
-                <td>{{ aula.disciplinaNome }}</td>
+                <td>
+                  <strong class="disciplina-nome">{{ aula.disciplinaNome }}</strong>
+                </td>
                 <td>{{ aula.professorNome }}</td>
                 <td>
-                  {{ aula.horarioDiaSemana }},
-                  {{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}
+                  <span class="selo selo-dia">{{ aula.horarioDiaSemana }}</span>
+                  <span class="horario">{{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}</span>
                 </td>
                 <td>
-                  <span class="vagas" [class.vagas-lotada]="aula.vagasRestantes === 0">
-                    {{ aula.vagasOcupadas }}/{{ aula.vagas }}
-                  </span>
-                  @if (aula.vagasRestantes > 0) {
-                    <small class="vagas-restantes">
-                      ({{ aula.vagasRestantes }} restante{{ aula.vagasRestantes === 1 ? '' : 's' }})
-                    </small>
-                  }
+                  <div class="ocupacao">
+                    <div class="barra">
+                      <span
+                        class="barra-preenchimento"
+                        [class.barra-lotada]="aula.vagasRestantes === 0"
+                        [style.width.%]="porcentagemOcupada(aula)"
+                      ></span>
+                    </div>
+                    <span class="vagas" [class.vagas-lotada]="aula.vagasRestantes === 0">
+                      {{ aula.vagasOcupadas }}/{{ aula.vagas }} vagas
+                    </span>
+                  </div>
                 </td>
                 <td class="col-acao">
-                  <button class="botao" type="button" (click)="editar(aula)">
+                  <button class="botao botao-acao" type="button" (click)="editar(aula)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                    </svg>
                     Editar
                   </button>
                   @if (exclusaoPendenteId() === aula.id) {
@@ -177,7 +201,10 @@
                       Confirmar exclusão?
                     </button>
                   } @else {
-                    <button class="botao" type="button" (click)="excluir(aula)">
+                    <button class="botao botao-acao botao-excluir" type="button" (click)="excluir(aula)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                      </svg>
                       Excluir
                     </button>
                   }

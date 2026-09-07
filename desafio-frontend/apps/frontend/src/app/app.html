@@ -1,21 +1,76 @@
-<header class="topbar">
-  <a class="marca" routerLink="/inicio">🎓 Sistema Acadêmico</a>
-  <div class="topbar-acao">
-    @if (auth.authenticated) {
-      <span class="usuario" [title]="auth.email">
-        <span class="usuario-nome">{{ auth.displayName || auth.email }}</span>
-        <span class="usuario-papel">{{ auth.roles.join(', ') }}</span>
-      </span>
-      <button class="botao botao-secundario" type="button" (click)="auth.logout()">
-        Sair
-      </button>
-    } @else {
-      <button class="botao botao-primario" type="button" (click)="auth.login()">
-        Entrar
-      </button>
-    }
+@if (auth.authenticated) {
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="sidebar-marca" routerLink="/inicio">
+        <span class="sidebar-logo">🎓</span>
+        <span class="sidebar-nome">Sistema Acadêmico</span>
+      </a>
+
+      <nav class="sidebar-nav">
+        <span class="sidebar-titulo">Navegação</span>
+        <a
+          class="nav-link"
+          routerLink="/inicio"
+          routerLinkActive="ativo"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <span class="nav-icone" aria-hidden="true">🏠</span>
+          <span>Início</span>
+        </a>
+        @if (auth.isAluno) {
+          <a
+            class="nav-link"
+            routerLink="/aluno"
+            routerLinkActive="ativo"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <span class="nav-icone" aria-hidden="true">📘</span>
+            <span>Minhas aulas</span>
+          </a>
+        }
+        @if (auth.isCoordenador) {
+          <a
+            class="nav-link"
+            routerLink="/coordenador"
+            routerLinkActive="ativo"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <span class="nav-icone" aria-hidden="true">🗂️</span>
+            <span>Gestão de aulas</span>
+          </a>
+        }
+      </nav>
+    </aside>
+
+    <div class="shell-main">
+      <header class="topbar">
+        <span class="topbar-titulo">{{ topbarTitulo }}</span>
+        <div class="topbar-acao">
+          <span class="usuario desktop-only" [title]="auth.email">
+            <span class="avatar avatar-pequeno">{{ inicial }}</span>
+            <span class="usuario-info">
+              <span class="usuario-nome">{{ auth.displayName || auth.email }}</span>
+              <span class="usuario-papel">{{ papelLabel }}</span>
+            </span>
+          </span>
+          <button class="botao botao-secundario" type="button" (click)="auth.logout()">
+            Sair
+          </button>
+        </div>
+      </header>
+      <main class="conteudo">
+        <router-outlet />
+      </main>
+    </div>
   </div>
-</header>
-<main class="conteudo">
-  <router-outlet />
-</main>
+} @else {
+  <div class="topbar topbar-publica">
+    <a class="marca" routerLink="/inicio">
+      <span class="sidebar-logo">🎓</span>
+      <span>Sistema Acadêmico</span>
+    </a>
+  </div>
+  <main class="conteudo conteudo-publico">
+    <router-outlet />
+  </main>
+}

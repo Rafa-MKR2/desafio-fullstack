@@ -92,13 +92,16 @@ INSERT INTO disciplina (id, nome, carga_horaria) VALUES
   (14, 'Informática',         60),
   (15, 'Empreendedorismo',    40);
 
--- Professores (5)
+-- Professores (8)
 INSERT INTO professor (id, nome) VALUES
   (1, 'Ana Paula'),
   (2, 'Carlos Alberto'),
   (3, 'Mariana Costa'),
   (4, 'Roberto Silva'),
-  (5, 'Fernanda Lima');
+  (5, 'Fernanda Lima'),
+  (6, 'Juliana Mendes'),
+  (7, 'Paulo Henrique'),
+  (8, 'Ricardo Nunes');
 
 -- Relacionamento Professor <-> Disciplina
 INSERT INTO professor_disciplina (professor_id, disciplina_id) VALUES
@@ -106,7 +109,10 @@ INSERT INTO professor_disciplina (professor_id, disciplina_id) VALUES
   (2, 2), (2, 3),
   (3, 5), (3, 6),
   (4, 7), (4, 4),
-  (5, 8), (5, 9);
+  (5, 8), (5, 9),
+  (6, 10), (6, 11),
+  (7, 12), (7, 13),
+  (8, 14), (8, 15);
 
 -- Horários (9)
 INSERT INTO horario (id, dia_semana, hora_inicio, hora_fim) VALUES
