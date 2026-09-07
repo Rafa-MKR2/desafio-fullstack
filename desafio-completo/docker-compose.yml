@@ -30,7 +30,9 @@ services:
       KC_DB_PASSWORD: desafio123
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HOSTNAME: localhost
+      # URL pública do Keycloak (host). Sem isso o issuer vira http://localhost
+      # (porta 80) e o backend Quarkus não consegue validar tokens.
+      KC_HOSTNAME_URL: http://localhost:8081
       KC_HTTP_PORT: 8081
       KC_PROXY: edge
     ports:

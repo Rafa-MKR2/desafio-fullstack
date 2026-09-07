@@ -1,13 +1,14 @@
 # desafio-fullstack
 
 Full-stack academic administration system for managing courses, disciplines,
-professors, schedules, coordinators, and students, secured with Keycloak.
+professors, schedules, aulas, and enrollments, secured with Keycloak. Students
+can browse aulas and enroll; coordinators manage the aula catalog (CRUD).
 
-> **Status:** in progress. Infrastructure, identity, database schema,
-> backend domain model, enrollment and aula business logic, REST
-> resources (including read-only catalogs and "my enrollments" for
-> students), role-based authorization, and unit + integration tests are
-> in place. The Angular UI is still to be implemented.
+> **Status:** in progress. Backend and frontend are functionally complete and
+> covered by automated tests. The work lives on two feature branches not yet
+> merged into `development`: `feature/frontend` (all frontend screens, auth and
+> services) and `fix/backend-oidc` (two small fixes that make real Keycloak
+> logins work end to end).
 
 ## Architecture
 
@@ -39,6 +40,9 @@ desafio-fullstack/
 ### Infrastructure (`desafio-completo/`)
 - `docker-compose.yml` orchestrating four services with health checks:
   PostgreSQL, Keycloak, backend, and frontend.
+- Keycloak advertises its public URL (`KC_HOSTNAME_URL: http://localhost:8081`)
+  so the OIDC issuer keeps the correct port — without it Keycloak announces
+  `http://localhost` (port 80) and token validation fails.
 - `init.sql` normalized schema and seed data: 15 disciplines,
   5 professors, 9 schedules, 9 courses, 3 coordinators, and 5 students,
   plus `aula`, `matricula`, and `professor_disciplina` tables.
@@ -52,62 +56,50 @@ desafio-fullstack/
 
 ### Backend (`desafio-backend/`)
 - Quarkus project configured with PostgreSQL, OIDC, CORS and OpenAPI.
-- OIDC wired to Keycloak (client `backend`).
+- OIDC wired to Keycloak (client `backend`). Two local-dev settings worth
+  knowing:
+  - `quarkus.oidc.roles.role-claim-path=realm_access/roles` — nested claims
+    use `/` as the separator; the common `realm_access.roles` form silently
+    fails to resolve roles.
+  - Audience verification is disabled because the Keycloak 24 realm does not
+    emit an `aud` claim on tokens.
+- 8 JPA entities with relationships, Panache repositories, and business
+  services (`MatriculaService`, `AulaService`, `HorarioUtil`) enforcing
+  capacity, duplicate enrollment, and schedule-conflict rules.
+- REST resources (`/aulas`, `/matriculas`, read-only catalogs), DTOs with
+  Bean Validation, role-based access via Keycloak realm roles, centralized
+  exception mappers (400/404/409), and OpenAPI/Swagger annotations.
+- Tests: Mockito unit tests plus a `@QuarkusTest` integration suite (OIDC
+  disabled, identities via `@TestSecurity`) exercising the REST flows, RBAC
+  and enrollment concurrency against a dedicated `desafio_test` database
+  reseeded per test by `TestDataSeeder` — **50 tests passing** (requires a
+  running PostgreSQL, as in CI).
 
-#### Domain model (`entity/`)
-- `Disciplina`, `Professor` (many-to-many), `Horario`, `Curso`,
-  `Coordenador`, `Aluno`, `Aula`, and `Matricula` JPA entities with
-  proper relationships.
-- `Aula` uses an optimistic `@Version` field for concurrency control.
-
-#### Data access (`repository/`)
-- `PanacheRepository` implementations for all eight entities.
-
-#### Business logic (`service/`)
-- `MatriculaService` implements enrollment rules: capacity control
-  (pessimistic lock), duplicate enrollment prevention, and schedule
-  conflict detection (day + time range overlap).
-- `AulaService` implements class CRUD rules: reference validation,
-  professor schedule conflict, vacancies never below enrolled count,
-  and delete protection when enrollments exist.
-
-#### API (`resource/`, `dto/`)
-- `MatriculaResource` (`/matriculas`): `POST` enrolls the authenticated
-  student, resolved from the JWT (`preferred_username` → e-mail), so
-  students can only enroll themselves; `GET` lists the student's own
-  enrollments and `GET /aulas` lists the aulas they are enrolled in
-  (with occupancy).
-- `AulaResource` (`/aulas`): `POST`, `GET` (with `disciplinaId`,
-  `professorId`, `diaSemana` filters), `GET/{id}`, `PUT/{id}`, `DELETE/{id}`.
-- `CatalogoResource` (`/disciplinas`, `/professores`, `/horarios`,
-  `/cursos`): read-only catalogs available to `aluno` and `coordenador`
-  for the enrollment screen.
-- Request/response DTOs using Bean Validation, documented with OpenAPI
-  annotations (`@Schema`, `@Operation`, `@APIResponse`).
-
-#### Authorization
-- `@RolesAllowed` via Keycloak realm roles: `coordenador` manages aulas
-  (write), `aluno` and `coordenador` can list/search aulas, and only
-  `aluno` can enroll.
-
-#### Error handling (`exception/`)
-- Centralized `ExceptionMapper`s for business errors (409), invalid
-  arguments (400), validation failures (400), and missing resources
-  (404), returning a standardized error payload.
-
-#### Tests (`src/test/`)
-- Mockito unit tests for `MatriculaService` and `AulaService` covering the
-  business rules, with no live database required.
-- Quarkus integration suite (`@QuarkusTest`, OIDC disabled, identities via
-  `@TestSecurity`) exercising `AulaResource`, `MatriculaResource`,
-  `CatalogoResource`, RBAC, and enrollment concurrency against a dedicated
-  `desafio_test` database reseeded per test by `TestDataSeeder`.
-
-### Frontend (`desafio-frontend/`)
-- Angular application bootstrapped with Keycloak integration
-  (`provideKeycloak`, silent SSO).
-- Nginx reverse proxy for `/api/` in Docker builds.
-- Currently only the default Nx welcome screen; no routes or screens yet.
+### Frontend (`desafio-frontend/`) — branch `feature/frontend`
+- Angular 22 standalone app (signals + `@if`/`@for` control flow) with Nx.
+- Keycloak integration via `keycloak-angular` (`provideKeycloak`,
+  `withAutoRefreshToken`, silent SSO) and a Bearer-token interceptor scoped to
+  the API base URL.
+- Auth facade (`AuthService`) and functional guards: `authGuard` (login
+  redirect) and `hasAnyRole(...)` for role-protected routes.
+- Role-based lazy routes: `/` → home; `/aluno` → `minhas-aulas`;
+  `/coordenador` → `gestao-aulas`.
+- Screens:
+  - **Home** (`inicio`): public login button, then role-aware shortcuts
+    (student/coordinator) and logout.
+  - **Student — "Matrícula em aulas"** (`minhas-aulas`): lists the student's
+    own aulas, catalog filters (disciplina/professor/dia), enrollment with
+    occupancy info and backend error feedback.
+  - **Coordinator — "Gestão de aulas"** (`gestao-aulas`): full aula CRUD —
+    list with filters, create/edit form (professors filtered by the selected
+    discipline, vagas validation aligned with backend rules) and two-click
+    delete confirmation.
+- Shared `HttpClient` services (`AulaService`, `CatalogoService`,
+  `MatriculaService`), typed models mirroring the backend DTOs, and
+  `environments` (dev/prod via `fileReplacements`).
+- Tests: **11 passing** (auth service, aula service, app shell, student and
+  coordinator component specs). `nx build` succeeds (bundle is above the
+  default 500 kB initial budget — mostly keycloak-js; expected).
 
 ## Prerequisites
 
@@ -133,7 +125,11 @@ docker compose up --build
 | Keycloak  | http://localhost:8081          | `admin` / `admin`  |
 | PostgreSQL| http://localhost:5432          | `desafio` / `desafio123` |
 
-### Option 2: local development
+> **Note:** the backend and frontend container services assume the Keycloak
+> hostname is reachable as configured in `KC_HOSTNAME_URL`; prefer Option 2
+> (host dev mode) for everyday work.
+
+### Option 2: local development (recommended)
 
 ```sh
 # 1. Infrastructure (PostgreSQL + Keycloak)
@@ -147,14 +143,18 @@ docker compose up -d postgres keycloak
 Then, in separate terminals:
 
 ```sh
-# Backend (Quarkus dev mode)
+# Backend (Quarkus dev mode, port 8080)
 cd desafio-backend
 ./mvnw quarkus:dev
 
-# Frontend (Angular dev server)
+# Frontend (Angular dev server, port 4200)
 cd desafio-frontend
 npx nx serve frontend
 ```
+
+Wait for the Keycloak container to be healthy before starting the backend.
+Open http://localhost:4200, click **Entrar** and log in with one of the
+Keycloak users below.
 
 ## Keycloak Users
 
@@ -163,38 +163,22 @@ npx nx serve frontend
 | `coordenador1..3@email.com`   | `coordenador` | `123456` |
 | `aluno1..5@email.com`         | `aluno`      | `123456` |
 
-## Next Steps / To-Do
+## Current Branches / Next Steps
 
-### Backend
-- [x] Implement `AulaService` (CRUD with creation/editing rules).
-- [x] Create REST resources for `Aula` and listing/filtering endpoints.
-- [x] Protect endpoints with role-based access control (`@RolesAllowed`).
-- [x] Document endpoints with Swagger/OpenAPI annotations.
-- [x] Add unit tests for the business rules.
-- [x] Add integration tests (especially enrollment concurrency) with a
-      test profile / seed data.
-- [x] Expose read-only catalogs (`/disciplinas`, `/professores`,
-      `/horarios`, `/cursos`) and the authenticated student's enrollments
-      (`GET /matriculas`, `GET /matriculas/aulas`).
-
-### Frontend
-- [ ] Build API services with `HttpClient`.
-- [ ] Implement `AuthGuard` and `RoleGuard` for protected routes.
-- [ ] Create enrollment screen (student) and class management screens
-      (coordinator).
-- [ ] Apply Nx library structure and RxJS patterns.
-
-### Infrastructure
-- [x] Configure a dedicated `desafio_test` database for backend
-      integration tests (OIDC disabled; still requires live PostgreSQL).
+- `fix/backend-oidc` — OIDC/Keycloak dev fixes described above; merge into
+  `development` so real Keycloak logins work.
+- `feature/frontend` — complete frontend; review and merge into `development`
+  after (or together with) the backend fix.
+- Optional polish afterwards: split/shrink the initial bundle to fit the
+  Angular budget, and add a browser-level E2E smoke test of the login and
+  enrollment flow.
 
 ## CI
 
-GitHub Actions (`ci.yml`) runs on every push/PR to `main` and
-`development`: backend build + unit tests (JDK 21, against a PostgreSQL
-service container) and frontend build + tests (Node.js 22).
+GitHub Actions (`ci.yml`) runs on every push/PR to `main` and `development`:
+backend build + tests (JDK 21, against a PostgreSQL service container, OIDC
+disabled) and frontend build + tests (Node.js 22).
 
 ## License
 
 MIT
-```
