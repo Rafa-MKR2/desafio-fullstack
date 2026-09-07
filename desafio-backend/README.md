@@ -1,5 +1,36 @@
 # backend
 
+API REST do **Sistema Acadêmico** (desafio-fullstack) em Quarkus. Para uma
+visão geral do projeto, ver `../README.md`.
+
+## Notas do projeto
+
+- **Stack:** Quarkus 3.39, Java 21, Hibernate ORM com Panache, PostgreSQL,
+  REST (Jackson) e OIDC (Keycloak).
+- **Configuração:** `src/main/resources/application.properties`. Pontos
+  importantes para o ambiente local:
+  - Banco `desafio` em `localhost:5432` (usuário/senha `desafio`/`desafio123`),
+    sobrescrevível por `QUARKUS_DATASOURCE_*`.
+  - OIDC aponta para `http://localhost:8081/realms/desafio` (Keycloak via
+    Docker; sobrescrevível por `QUARKUS_OIDC_AUTH_SERVER_URL`).
+  - `quarkus.oidc.roles.role-claim-path=realm_access/roles`: claims aninhados
+    usam `/` como separador (a forma com `.` não resolve os papéis).
+  - A verificação de `audience` está desativada porque o realm do Keycloak 24
+    não emite o claim `aud` nos tokens.
+- **Recursos:** `/aulas` (CRUD + filtros, escrita só `coordenador`),
+  `/matriculas` (aluno autenticado, resolvido pelo e-mail do JWT),
+  catálogos `/disciplinas`, `/professores`, `/horarios`, `/cursos`;
+  documentação OpenAPI/Swagger em `http://localhost:8080/q/swagger-ui`.
+- **Testes** (`src/test`): unitários com Mockito + suíte de integração
+  `@QuarkusTest` (OIDC desativado, identidade via `@TestSecurity`) contra um
+  banco dedicado `desafio_test`. Exigem PostgreSQL no ar:
+
+  ```sh
+  ./mvnw clean verify -DskipITs
+  ```
+
+---
+
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.

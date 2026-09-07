@@ -1,20 +1,31 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import Keycloak from 'keycloak-js';
 import { App } from './app';
-import { NxWelcome } from './nx-welcome';
+
+/** Instância mínima do Keycloak para renderizar o shell sem rede. */
+const fakeKeycloak = {
+  authenticated: false,
+  tokenParsed: undefined,
+} as unknown as Keycloak;
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App, NxWelcome],
+      imports: [App],
+      providers: [
+        provideRouter([]),
+        { provide: Keycloak, useValue: fakeKeycloak },
+      ],
     }).compileComponents();
   });
 
-  it('should render title', async () => {
+  it('renderiza o shell com a marca do app', () => {
     const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
+    fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Welcome frontend',
+    expect(compiled.querySelector('.marca')?.textContent).toContain(
+      'Sistema Acadêmico',
     );
   });
 });

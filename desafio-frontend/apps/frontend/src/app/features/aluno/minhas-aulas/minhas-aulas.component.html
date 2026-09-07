@@ -1,0 +1,144 @@
+<section class="pagina">
+  <header class="cabecalho-pagina">
+    <div class="titulo">
+      <span class="icone-tela" aria-hidden="true">📘</span>
+      <div>
+        <h1>Minhas aulas</h1>
+        <p class="subtitulo">
+          {{ minhasAulas().length }} matriculada{{ minhasAulas().length === 1 ? '' : 's' }}
+          · {{ aulasComVaga() }} com vagas disponíveis
+        </p>
+      </div>
+    </div>
+  </header>
+
+  @if (mensagem(); as msg) {
+    <div
+      class="aviso"
+      [class.aviso-sucesso]="msg.tipo === 'sucesso'"
+      [class.aviso-erro]="msg.tipo === 'erro'"
+      role="status"
+    >
+      <span class="aviso-texto">{{ msg.texto }}</span>
+      <button class="aviso-fechar" type="button" aria-label="Fechar aviso" (click)="fecharMensagem()">
+        ×
+      </button>
+    </div>
+  }
+
+  <section class="cartao">
+    <div class="toolbar">
+      <div class="toolbar-filtros">
+        <label class="campo-label">
+          Disciplina
+          <select class="campo-select" [ngModel]="filtroDisciplinaId()" (ngModelChange)="mudarFiltroDisciplina($event)">
+            <option [ngValue]="null">Todas</option>
+            @for (d of disciplinas(); track d.id) {
+              <option [ngValue]="d.id">{{ d.nome }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="campo-label">
+          Professor
+          <select class="campo-select" [ngModel]="filtroProfessorId()" (ngModelChange)="mudarFiltroProfessor($event)">
+            <option [ngValue]="null">Todos</option>
+            @for (p of professores(); track p.id) {
+              <option [ngValue]="p.id">{{ p.nome }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="campo-label">
+          Dia da semana
+          <select class="campo-select" [ngModel]="filtroDia()" (ngModelChange)="mudarFiltroDia($event)">
+            <option [ngValue]="null">Todos</option>
+            @for (dia of dias(); track dia) {
+              <option [ngValue]="dia">{{ dia }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <button class="botao" type="button" (click)="limparFiltros()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18M6 12h12M10 18h4" />
+        </svg>
+        Limpar filtros
+      </button>
+    </div>
+
+    @if (carregando()) {
+      <p class="vazio">Carregando aulas…</p>
+    } @else if (erroLista()) {
+      <p class="vazio aviso-erro-texto">{{ erroLista() }}</p>
+    } @else if (aulas().length === 0) {
+      <p class="vazio">Nenhuma aula encontrada com os filtros atuais.</p>
+    } @else {
+      <div class="tabela-rolagem">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th>Disciplina</th>
+              <th>Professor</th>
+              <th>Dia · Horário</th>
+              <th>Vagas</th>
+              <th class="col-acao">Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (aula of aulas(); track aula.id) {
+              <tr>
+                <td>
+                  <strong class="disciplina-nome">{{ aula.disciplinaNome }}</strong>
+                </td>
+                <td>{{ aula.professorNome }}</td>
+                <td>
+                  <span class="selo selo-dia">{{ aula.horarioDiaSemana }}</span>
+                  <span class="horario">{{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}</span>
+                </td>
+                <td>
+                  <div class="ocupacao">
+                    <div class="barra">
+                      <span
+                        class="barra-preenchimento"
+                        [class.barra-lotada]="aula.vagasRestantes === 0"
+                        [style.width.%]="porcentagemOcupada(aula)"
+                      ></span>
+                    </div>
+                    <span class="vagas" [class.vagas-lotada]="aula.vagasRestantes === 0">
+                      {{ aula.vagasOcupadas }}/{{ aula.vagas }} vagas
+                    </span>
+                  </div>
+                </td>
+                <td class="col-acao">
+                  @if (idsMatriculadas().has(aula.id)) {
+                    <span class="selo selo-ok">Já matriculado</span>
+                  } @else if (aula.vagasRestantes === 0) {
+                    <span class="selo selo-lotada">Lotada</span>
+                  } @else {
+                    <button
+                      class="botao botao-primario"
+                      type="button"
+                      (click)="matricular(aula)"
+                      [disabled]="matriculaPendenteId() !== null"
+                    >
+                      @if (matriculaPendenteId() === aula.id) {
+                        Matriculando…
+                      } @else {
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Matricular
+                      }
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</section>
