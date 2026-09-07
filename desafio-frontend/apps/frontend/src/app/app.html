@@ -1,2 +1,21 @@
-<app-nx-welcome></app-nx-welcome>
-<router-outlet></router-outlet>
+<header class="topbar">
+  <a class="marca" routerLink="/inicio">🎓 Sistema Acadêmico</a>
+  <div class="topbar-acao">
+    @if (auth.authenticated) {
+      <span class="usuario" [title]="auth.email">
+        <span class="usuario-nome">{{ auth.displayName || auth.email }}</span>
+        <span class="usuario-papel">{{ auth.roles.join(', ') }}</span>
+      </span>
+      <button class="botao botao-secundario" type="button" (click)="auth.logout()">
+        Sair
+      </button>
+    } @else {
+      <button class="botao botao-primario" type="button" (click)="auth.login()">
+        Entrar
+      </button>
+    }
+  </div>
+</header>
+<main class="conteudo">
+  <router-outlet />
+</main>

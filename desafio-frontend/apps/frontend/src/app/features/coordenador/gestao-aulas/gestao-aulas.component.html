@@ -1,0 +1,192 @@
+<section class="pagina">
+  <h1>Gestão de aulas</h1>
+
+  @if (mensagem(); as msg) {
+    <div
+      class="aviso"
+      [class.aviso-sucesso]="msg.tipo === 'sucesso'"
+      [class.aviso-erro]="msg.tipo === 'erro'"
+      role="status"
+    >
+      {{ msg.texto }}
+      <button class="aviso-fechar" type="button" aria-label="Fechar aviso" (click)="fecharMensagem()">
+        ×
+      </button>
+    </div>
+  }
+
+  <div class="acoes">
+    <button class="botao botao-primario" type="button" (click)="abrirNovo()">
+      + Nova aula
+    </button>
+  </div>
+
+  @if (formAberto()) {
+    <section class="cartao formulario">
+      <h2>{{ aulaEditando() ? 'Editar aula' : 'Nova aula' }}</h2>
+      <div class="formulario-campos">
+        <label class="campo">
+          Disciplina
+          <select
+            [ngModel]="formDisciplinaId()"
+            (ngModelChange)="mudarFormDisciplina($event)"
+          >
+            <option [ngValue]="null" disabled>Selecione…</option>
+            @for (d of disciplinas(); track d.id) {
+              <option [ngValue]="d.id">{{ d.nome }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="campo">
+          Professor
+          <select
+            [ngModel]="formProfessorId()"
+            (ngModelChange)="formProfessorId.set($event)"
+          >
+            <option [ngValue]="null" disabled>Selecione…</option>
+            @for (p of professoresDaDisciplina(); track p.id) {
+              <option [ngValue]="p.id">{{ p.nome }}</option>
+            }
+          </select>
+          @if (formDisciplinaId() != null && professoresDaDisciplina().length === 0) {
+            <small class="campo-aviso">Nenhum professor leciona essa disciplina.</small>
+          }
+        </label>
+
+        <label class="campo">
+          Horário
+          <select
+            [ngModel]="formHorarioId()"
+            (ngModelChange)="formHorarioId.set($event)"
+          >
+            <option [ngValue]="null" disabled>Selecione…</option>
+            @for (h of horarios(); track h.id) {
+              <option [ngValue]="h.id">
+                {{ h.diaSemana }}, {{ h.horaInicio }}–{{ h.horaFim }}
+              </option>
+            }
+          </select>
+        </label>
+
+        <label class="campo">
+          Vagas
+          <input
+            type="number"
+            min="1"
+            step="1"
+            [ngModel]="formVagas()"
+            (ngModelChange)="formVagas.set($event)"
+          />
+        </label>
+      </div>
+      <div class="formulario-acoes">
+        <button
+          class="botao botao-primario"
+          type="button"
+          (click)="salvar()"
+          [disabled]="salvando()"
+        >
+          {{ salvando() ? 'Salvando…' : (aulaEditando() ? 'Salvar alterações' : 'Criar aula') }}
+        </button>
+        <button class="botao" type="button" (click)="cancelar()">Cancelar</button>
+      </div>
+    </section>
+  }
+
+  <section class="cartao">
+    <h2>Aulas ({{ aulas().length }})</h2>
+
+    <div class="filtros">
+      <label class="filtro">
+        Disciplina
+        <select [ngModel]="filtroDisciplinaId()" (ngModelChange)="mudarFiltroDisciplina($event)">
+          <option [ngValue]="null">Todas</option>
+          @for (d of disciplinas(); track d.id) {
+            <option [ngValue]="d.id">{{ d.nome }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filtro">
+        Professor
+        <select [ngModel]="filtroProfessorId()" (ngModelChange)="mudarFiltroProfessor($event)">
+          <option [ngValue]="null">Todos</option>
+          @for (p of professores(); track p.id) {
+            <option [ngValue]="p.id">{{ p.nome }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filtro">
+        Dia da semana
+        <select [ngModel]="filtroDia()" (ngModelChange)="mudarFiltroDia($event)">
+          <option [ngValue]="null">Todos</option>
+          @for (dia of dias(); track dia) {
+            <option [ngValue]="dia">{{ dia }}</option>
+          }
+        </select>
+      </label>
+
+      <button class="botao" type="button" (click)="limparFiltros()">Limpar filtros</button>
+    </div>
+
+    @if (carregando()) {
+      <p class="vazio">Carregando aulas…</p>
+    } @else if (erroLista()) {
+      <p class="vazio aviso-erro-texto">{{ erroLista() }}</p>
+    } @else if (aulas().length === 0) {
+      <p class="vazio">Nenhuma aula encontrada com os filtros atuais.</p>
+    } @else {
+      <div class="tabela-rolagem">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th>Disciplina</th>
+              <th>Professor</th>
+              <th>Horário</th>
+              <th>Vagas</th>
+              <th class="col-acao">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (aula of aulas(); track aula.id) {
+              <tr>
+                <td>{{ aula.disciplinaNome }}</td>
+                <td>{{ aula.professorNome }}</td>
+                <td>
+                  {{ aula.horarioDiaSemana }},
+                  {{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}
+                </td>
+                <td>
+                  <span class="vagas" [class.vagas-lotada]="aula.vagasRestantes === 0">
+                    {{ aula.vagasOcupadas }}/{{ aula.vagas }}
+                  </span>
+                  @if (aula.vagasRestantes > 0) {
+                    <small class="vagas-restantes">
+                      ({{ aula.vagasRestantes }} restante{{ aula.vagasRestantes === 1 ? '' : 's' }})
+                    </small>
+                  }
+                </td>
+                <td class="col-acao">
+                  <button class="botao" type="button" (click)="editar(aula)">
+                    Editar
+                  </button>
+                  @if (exclusaoPendenteId() === aula.id) {
+                    <button class="botao botao-perigo" type="button" (click)="excluir(aula)">
+                      Confirmar exclusão?
+                    </button>
+                  } @else {
+                    <button class="botao" type="button" (click)="excluir(aula)">
+                      Excluir
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</section>
