@@ -38,16 +38,19 @@
     "@parcel/watcher@2.6.0": true
   },
   "dependencies": {
+    "@angular/animations": "^22.1.5",
     "@angular/common": "~22.1.0",
     "@angular/compiler": "~22.1.0",
     "@angular/core": "~22.1.0",
     "@angular/forms": "~22.1.0",
     "@angular/platform-browser": "~22.1.0",
     "@angular/router": "~22.1.0",
+    "@primeng/themes": "^21.0.4",
     "keycloak-angular": "^22.0.0",
     "keycloak-js": "^26.2.4",
     "primeflex": "^4.0.0",
     "primeicons": "^8.0.0",
+    "primeng": "^22.1.0",
     "rxjs": "~7.8.0"
   }
 }

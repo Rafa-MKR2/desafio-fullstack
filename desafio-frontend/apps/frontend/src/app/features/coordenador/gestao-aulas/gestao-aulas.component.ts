@@ -9,8 +9,10 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Tag } from 'primeng/tag';
 import type { Aula, AulaPayload } from '../../../shared/models/aula';
 import type {
+  Curso,
   Disciplina,
   Horario,
   Professor,
@@ -31,7 +33,7 @@ interface Mensagem {
  */
 @Component({
   selector: 'app-gestao-aulas',
-  imports: [FormsModule],
+  imports: [FormsModule, Tag],
   templateUrl: './gestao-aulas.component.html',
   styleUrl: './gestao-aulas.component.css',
 })
@@ -46,11 +48,14 @@ export class GestaoAulasComponent implements OnInit {
   disciplinas = signal<Disciplina[]>([]);
   professores = signal<Professor[]>([]);
   horarios = signal<Horario[]>([]);
+  cursos = signal<Curso[]>([]);
   dias = signal<string[]>([]);
 
   filtroDisciplinaId = signal<number | null>(null);
   filtroProfessorId = signal<number | null>(null);
   filtroDia = signal<string | null>(null);
+  filtroCursoId = signal<number | null>(null);
+  filtroVagasDisponiveis = signal<boolean | null>(null);
 
   formAberto = signal(false);
   aulaEditando = signal<Aula | null>(null);
@@ -63,6 +68,7 @@ export class GestaoAulasComponent implements OnInit {
   formProfessorId = signal<number | null>(null);
   formHorarioId = signal<number | null>(null);
   formVagas = signal<number | null>(null);
+  formCursoIds = signal<number[]>([]);
 
   /** Total de vagas oferecidas nas aulas listadas. */
   readonly vagasTotais = computed(() =>
@@ -110,6 +116,11 @@ export class GestaoAulasComponent implements OnInit {
           this.dias.set([...new Set(horarios.map((h) => h.diaSemana))]);
         },
       });
+
+    this.catalogoService
+      .listarCursos()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (cursos) => this.cursos.set(cursos) });
   }
 
   carregarAulas(): void {
@@ -120,6 +131,8 @@ export class GestaoAulasComponent implements OnInit {
         disciplinaId: this.filtroDisciplinaId(),
         professorId: this.filtroProfessorId(),
         diaSemana: this.filtroDia(),
+        cursoId: this.filtroCursoId(),
+        vagasDisponiveis: this.filtroVagasDisponiveis(),
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -151,10 +164,22 @@ export class GestaoAulasComponent implements OnInit {
     this.carregarAulas();
   }
 
+  mudarFiltroCurso(valor: number | null): void {
+    this.filtroCursoId.set(valor);
+    this.carregarAulas();
+  }
+
+  mudarFiltroVagas(disponiveis: boolean): void {
+    this.filtroVagasDisponiveis.set(disponiveis);
+    this.carregarAulas();
+  }
+
   limparFiltros(): void {
     this.filtroDisciplinaId.set(null);
     this.filtroProfessorId.set(null);
     this.filtroDia.set(null);
+    this.filtroCursoId.set(null);
+    this.filtroVagasDisponiveis.set(null);
     this.carregarAulas();
   }
 
@@ -164,6 +189,7 @@ export class GestaoAulasComponent implements OnInit {
     this.formProfessorId.set(null);
     this.formHorarioId.set(null);
     this.formVagas.set(null);
+    this.formCursoIds.set([]);
     this.formAberto.set(true);
   }
 
@@ -173,6 +199,7 @@ export class GestaoAulasComponent implements OnInit {
     this.formProfessorId.set(aula.professorId);
     this.formHorarioId.set(aula.horarioId);
     this.formVagas.set(aula.vagas);
+    this.formCursoIds.set(aula.cursoIds ?? []);
     this.formAberto.set(true);
   }
 
@@ -185,6 +212,15 @@ export class GestaoAulasComponent implements OnInit {
     this.formDisciplinaId.set(valor);
     // Professor deve lecionar a disciplina escolhida.
     this.formProfessorId.set(null);
+  }
+
+  alternarCurso(id: number, selecionado: boolean): void {
+    const atuais = this.formCursoIds();
+    this.formCursoIds.set(
+      selecionado
+        ? [...new Set([...atuais, id])]
+        : atuais.filter((c) => c !== id),
+    );
   }
 
   salvar(): void {
@@ -217,11 +253,13 @@ export class GestaoAulasComponent implements OnInit {
     }
 
     this.salvando.set(true);
+    const cursoIds = this.formCursoIds();
     const payload: AulaPayload = {
       disciplinaId,
       professorId,
       horarioId,
       vagas,
+      ...(cursoIds.length > 0 ? { cursoIds } : {}),
     };
     const operacao =
       editando != null

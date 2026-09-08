@@ -82,6 +82,25 @@
             (ngModelChange)="formVagas.set($event)"
           />
         </label>
+
+        <label class="campo-label campo-cursos">
+          Cursos autorizados
+          <span class="campo-dica">
+            Deixe em branco para liberar a aula a todos os cursos.
+          </span>
+          <div class="cursos-opcoes">
+            @for (curso of cursos(); track curso.id) {
+              <label class="curso-opcao">
+                <input
+                  type="checkbox"
+                  [checked]="formCursoIds().includes(curso.id)"
+                  (change)="alternarCurso(curso.id, $event.target.checked)"
+                />
+                {{ curso.nome }}
+              </label>
+            }
+          </div>
+        </label>
       </div>
       <div class="formulario-acoes">
         <button
@@ -136,6 +155,24 @@
             }
           </select>
         </label>
+
+        <label class="campo-label">
+          Curso autorizado
+          <select class="campo-select" [ngModel]="filtroCursoId()" (ngModelChange)="mudarFiltroCurso($event)">
+            <option [ngValue]="null">Todos</option>
+            @for (curso of cursos(); track curso.id) {
+              <option [ngValue]="curso.id">{{ curso.nome }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="campo-label">
+          Vagas
+          <select class="campo-select" [ngModel]="filtroVagasDisponiveis()" (ngModelChange)="mudarFiltroVagas($event)">
+            <option [ngValue]="null">Todas</option>
+            <option [ngValue]="true">Só com vaga</option>
+          </select>
+        </label>
       </div>
 
       <button class="botao" type="button" (click)="limparFiltros()">
@@ -172,7 +209,7 @@
                 </td>
                 <td>{{ aula.professorNome }}</td>
                 <td>
-                  <span class="selo selo-dia">{{ aula.horarioDiaSemana }}</span>
+                  <p-tag [value]="aula.horarioDiaSemana" severity="secondary" />
                   <span class="horario">{{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}</span>
                 </td>
                 <td>
