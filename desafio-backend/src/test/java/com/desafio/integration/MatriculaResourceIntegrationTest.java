@@ -11,6 +11,8 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
@@ -51,6 +53,16 @@ class MatriculaResourceIntegrationTest {
         // Segunda 09:00-11:00 cruza com 08:00-10:00.
         request.setHorarioId(seeder.horarioId("Segunda", "09:00", "11:00"));
         request.setVagas(vagas);
+        return aulaService.criar(request).getId();
+    }
+
+    private Long criarAulaComCursoAutorizado(String disciplina, String professor, String curso, int vagas) {
+        AulaRequest request = new AulaRequest();
+        request.setDisciplinaId(seeder.disciplinaId(disciplina));
+        request.setProfessorId(seeder.professorId(professor));
+        request.setHorarioId(seeder.horarioId("Segunda", "08:00", "10:00"));
+        request.setVagas(vagas);
+        request.setCursoIds(List.of(seeder.cursoId(curso)));
         return aulaService.criar(request).getId();
     }
 
@@ -107,6 +119,39 @@ class MatriculaResourceIntegrationTest {
                 .then()
                 .statusCode(404)
                 .body("code", equalTo("not_found"));
+    }
+
+    @Test
+    @TestSecurity(user = "aluno1@email.com", roles = "aluno")
+    void matriculaEmAulaAutorizadaParaOCursoRetorna201() {
+        // aluno1 tem curso Ciência da Computação.
+        Long aulaId = criarAulaComCursoAutorizado("Matemática", "Ana Paula", "Ciência da Computação", 10);
+
+        given()
+                .contentType("application/json")
+                .body("""
+                        {"aulaId": %d}
+                        """.formatted(aulaId))
+                .when().post("/matriculas")
+                .then()
+                .statusCode(201);
+    }
+
+    @Test
+    @TestSecurity(user = "aluno3@email.com", roles = "aluno")
+    void matriculaEmAulaNaoAutorizadaParaOCursoRetorna409() {
+        // aluno3 tem curso Engenharia Civil; a aula só autoriza Ciência da Computação.
+        Long aulaId = criarAulaComCursoAutorizado("Matemática", "Ana Paula", "Ciência da Computação", 10);
+
+        given()
+                .contentType("application/json")
+                .body("""
+                        {"aulaId": %d}
+                        """.formatted(aulaId))
+                .when().post("/matriculas")
+                .then()
+                .statusCode(409)
+                .body("code", equalTo("business_error"));
     }
 
     @Test

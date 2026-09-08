@@ -13,6 +13,7 @@ export interface Aula {
   vagas: number;
   vagasOcupadas: number;
   vagasRestantes: number;
+  cursoIds?: number[];
 }
 
 /** Corpo de criação/edição de aula (POST/PUT /aulas). */
@@ -21,6 +22,7 @@ export interface AulaPayload {
   professorId: number;
   horarioId: number;
   vagas: number;
+  cursoIds?: number[];
 }
 
 /** Filtros aceitos por GET /aulas. Valores null/undefined são omitidos. */

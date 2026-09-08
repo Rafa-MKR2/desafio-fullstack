@@ -2,9 +2,11 @@ package com.desafio.service;
 
 import com.desafio.entity.Aluno;
 import com.desafio.entity.Aula;
+import com.desafio.entity.Curso;
 import com.desafio.entity.Disciplina;
 import com.desafio.entity.Horario;
 import com.desafio.entity.Matricula;
+import com.desafio.exception.CursoNaoAutorizadoException;
 import com.desafio.exception.HorarioConflitanteException;
 import com.desafio.exception.MatriculaDuplicadaException;
 import com.desafio.exception.NotFoundException;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -129,7 +132,7 @@ class MatriculaServiceTest {
     }
 
     @Test
-    void matricularSemChoqueQuandoHorarioEmDiaDiferente() {
+    void matriculaSemChoqueQuandoHorarioEmDiaDiferente() {
         Aula aulaOutroDia = new Aula();
         aulaOutroDia.setId(11L);
         aulaOutroDia.setVagas(5);
@@ -147,6 +150,42 @@ class MatriculaServiceTest {
         assertNotNull(matricula);
         assertEquals(5, aula.getVagas());
         verify(matriculaRepository).persist(matricula);
+    }
+
+    @Test
+    void matriculaEmAulaAutorizadaParaOCursoPersiste() {
+        Curso computacao = new Curso();
+        computacao.setId(1L);
+        computacao.setNome("Ciência da Computação");
+        aluno.setCurso(computacao);
+        aula.setCursosAutorizados(Set.of(computacao));
+
+        when(alunoRepository.findById(1L)).thenReturn(aluno);
+        when(aulaRepository.findById(eq(10L), any(LockModeType.class))).thenReturn(aula);
+        when(matriculaRepository.countByAula(10L)).thenReturn(0L);
+        when(matriculaRepository.existsByAlunoAndAula(1L, 10L)).thenReturn(false);
+        when(matriculaRepository.findAulasByAluno(1L)).thenReturn(List.of());
+
+        Matricula matricula = service.matricular(1L, 10L);
+
+        assertNotNull(matricula);
+        verify(matriculaRepository).persist(matricula);
+    }
+
+    @Test
+    void matriculaEmAulaNaoAutorizadaParaOCursoLancaCursoNaoAutorizado() {
+        Curso computacao = new Curso();
+        computacao.setId(1L);
+        Curso engenharia = new Curso();
+        engenharia.setId(2L);
+        aluno.setCurso(engenharia);
+        aula.setCursosAutorizados(Set.of(computacao));
+
+        when(alunoRepository.findById(1L)).thenReturn(aluno);
+        when(aulaRepository.findById(eq(10L), any(LockModeType.class))).thenReturn(aula);
+
+        assertThrows(CursoNaoAutorizadoException.class, () -> service.matricular(1L, 10L));
+        verify(matriculaRepository, never()).persist(any(Matricula.class));
     }
 
     private static Disciplina disciplina(Long id, String nome) {

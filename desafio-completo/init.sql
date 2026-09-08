@@ -67,6 +67,13 @@ CREATE TABLE IF NOT EXISTS aula (
     version       BIGINT NOT NULL DEFAULT 0
 );
 
+-- Cursos autorizados a se matricular na aula (N:N)
+CREATE TABLE IF NOT EXISTS aula_curso (
+    aula_id  BIGINT NOT NULL REFERENCES aula(id),
+    curso_id BIGINT NOT NULL REFERENCES curso(id),
+    PRIMARY KEY (aula_id, curso_id)
+);
+
 CREATE TABLE IF NOT EXISTS matricula (
     id       BIGSERIAL PRIMARY KEY,
     aluno_id BIGINT NOT NULL REFERENCES aluno(id),

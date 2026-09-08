@@ -190,6 +190,33 @@
   flex-wrap: wrap;
 }
 
+.campo-dica {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--cor-texto-suave, #6b7280);
+}
+
+.cursos-opcoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.35rem 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.curso-opcao {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.curso-opcao input {
+  accent-color: var(--cor-primaria, #4f46e5);
+  flex-shrink: 0;
+}
+
 /* ---- Avisos ---- */
 .aviso {
   display: flex;

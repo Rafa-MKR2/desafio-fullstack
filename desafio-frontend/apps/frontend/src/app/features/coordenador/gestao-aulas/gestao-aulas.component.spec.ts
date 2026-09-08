@@ -56,6 +56,7 @@ describe('GestaoAulasComponent', () => {
     http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/disciplinas')).flush([disciplina]);
     http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/professores')).flush([professor]);
     http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/horarios')).flush([horario]);
+    http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/cursos')).flush([]);
     http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/aulas')).flush([aula]);
   }
 
