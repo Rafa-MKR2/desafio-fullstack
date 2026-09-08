@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
+import java.util.List;
+
 @Schema(description = "Dados para criação ou edição de uma aula")
 public class AulaRequest {
 
@@ -23,6 +25,9 @@ public class AulaRequest {
     @NotNull(message = "vagas é obrigatório")
     @Min(value = 1, message = "vagas deve ser no mínimo 1")
     private Integer vagas;
+
+    @Schema(description = "Ids dos cursos autorizados a se matricular na aula. Vazio/ausente = aberta a todos os cursos")
+    private List<Long> cursoIds;
 
     public Long getDisciplinaId() {
         return disciplinaId;
@@ -54,5 +59,13 @@ public class AulaRequest {
 
     public void setVagas(Integer vagas) {
         this.vagas = vagas;
+    }
+
+    public List<Long> getCursoIds() {
+        return cursoIds;
+    }
+
+    public void setCursoIds(List<Long> cursoIds) {
+        this.cursoIds = cursoIds;
     }
 }

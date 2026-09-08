@@ -64,7 +64,15 @@ CREATE TABLE IF NOT EXISTS aula (
     professor_id  BIGINT NOT NULL REFERENCES professor(id),
     horario_id    BIGINT NOT NULL REFERENCES horario(id),
     vagas         INTEGER NOT NULL,
+    ativo         BOOLEAN NOT NULL DEFAULT TRUE,
     version       BIGINT NOT NULL DEFAULT 0
+);
+
+-- Cursos autorizados a se matricular na aula (N:N)
+CREATE TABLE IF NOT EXISTS aula_curso (
+    aula_id  BIGINT NOT NULL REFERENCES aula(id),
+    curso_id BIGINT NOT NULL REFERENCES curso(id),
+    PRIMARY KEY (aula_id, curso_id)
 );
 
 CREATE TABLE IF NOT EXISTS matricula (

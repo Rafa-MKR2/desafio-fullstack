@@ -2,12 +2,14 @@ package com.desafio.service;
 
 import com.desafio.dto.AulaRequest;
 import com.desafio.entity.Aula;
+import com.desafio.entity.Curso;
 import com.desafio.entity.Disciplina;
 import com.desafio.entity.Horario;
 import com.desafio.entity.Professor;
 import com.desafio.exception.NotFoundException;
 import com.desafio.exception.ProfessorConflitanteException;
 import com.desafio.repository.AulaRepository;
+import com.desafio.repository.CursoRepository;
 import com.desafio.repository.DisciplinaRepository;
 import com.desafio.repository.HorarioRepository;
 import com.desafio.repository.MatriculaRepository;
@@ -19,7 +21,9 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -35,6 +39,7 @@ class AulaServiceTest {
     private final ProfessorRepository professorRepository = mock(ProfessorRepository.class);
     private final HorarioRepository horarioRepository = mock(HorarioRepository.class);
     private final MatriculaRepository matriculaRepository = mock(MatriculaRepository.class);
+    private final CursoRepository cursoRepository = mock(CursoRepository.class);
 
     private Disciplina disciplina;
     private Professor professor;
@@ -48,6 +53,7 @@ class AulaServiceTest {
         service.professorRepository = professorRepository;
         service.horarioRepository = horarioRepository;
         service.matriculaRepository = matriculaRepository;
+        service.cursoRepository = cursoRepository;
 
         disciplina = new Disciplina();
         disciplina.setId(1L);
@@ -89,6 +95,42 @@ class AulaServiceTest {
         assertEquals("Segunda", aula.getHorario().getDiaSemana());
         assertEquals(30, aula.getVagas());
         verify(aulaRepository).persist(aula);
+    }
+
+    @Test
+    void criarComCursosAutorizadosDefineCursosNaAula() {
+        Curso computacao = new Curso();
+        computacao.setId(1L);
+        computacao.setNome("Ciência da Computação");
+
+        AulaRequest req = request();
+        req.setCursoIds(List.of(1L));
+
+        when(disciplinaRepository.findById(1L)).thenReturn(disciplina);
+        when(professorRepository.findById(1L)).thenReturn(professor);
+        when(horarioRepository.findById(1L)).thenReturn(horario);
+        when(cursoRepository.findById(1L)).thenReturn(computacao);
+        when(aulaRepository.listarPorProfessorMesmoHorario(1L, "Segunda", "08:00", "10:00"))
+                .thenReturn(List.of());
+
+        Aula aula = service.criar(req);
+
+        assertEquals(1, aula.getCursosAutorizados().size());
+        assertTrue(aula.getCursosAutorizados().contains(computacao));
+    }
+
+    @Test
+    void criarComCursoInexistenteLancaIllegalArgumentException() {
+        AulaRequest req = request();
+        req.setCursoIds(List.of(999L));
+
+        when(disciplinaRepository.findById(1L)).thenReturn(disciplina);
+        when(professorRepository.findById(1L)).thenReturn(professor);
+        when(horarioRepository.findById(1L)).thenReturn(horario);
+        when(cursoRepository.findById(999L)).thenReturn(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.criar(req));
+        verify(aulaRepository, never()).persist(any(Aula.class));
     }
 
     @Test
@@ -177,16 +219,19 @@ class AulaServiceTest {
     }
 
     @Test
-    void excluirSemMatriculasDeleta() {
+    void excluirSemMatriculasMarcaComoInativo() {
         Aula aulaExistente = new Aula();
         aulaExistente.setId(10L);
+        aulaExistente.setAtivo(true);
 
         when(aulaRepository.findById(10L)).thenReturn(aulaExistente);
         when(matriculaRepository.countByAula(10L)).thenReturn(0L);
 
         service.excluir(10L);
 
-        verify(aulaRepository).delete(aulaExistente);
+        assertFalse(aulaExistente.isAtivo());
+        verify(aulaRepository).persist(aulaExistente);
+        verify(aulaRepository, never()).delete(any(Aula.class));
     }
 
     @Test

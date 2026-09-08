@@ -2,7 +2,9 @@ package com.desafio.service;
 
 import com.desafio.entity.Aluno;
 import com.desafio.entity.Aula;
+import com.desafio.entity.Curso;
 import com.desafio.entity.Matricula;
+import com.desafio.exception.CursoNaoAutorizadoException;
 import com.desafio.exception.HorarioConflitanteException;
 import com.desafio.exception.MatriculaDuplicadaException;
 import com.desafio.exception.NotFoundException;
@@ -16,6 +18,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class MatriculaService {
@@ -37,9 +40,11 @@ public class MatriculaService {
         }
 
         Aula aula = aulaRepository.findById(aulaId, LockModeType.PESSIMISTIC_WRITE);
-        if (aula == null) {
+        if (aula == null || !aula.isAtivo()) {
             throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
+
+        validarCursoAutorizado(aluno, aula);
 
         long matriculados = matriculaRepository.countByAula(aulaId);
         if (matriculados >= aula.getVagas()) {
@@ -58,6 +63,21 @@ public class MatriculaService {
         matriculaRepository.persist(matricula);
 
         return matricula;
+    }
+
+    /**
+     * Bloqueia a matrícula quando a aula restringe os cursos autorizados e o
+     * curso do aluno não está entre eles.
+     */
+    private void validarCursoAutorizado(Aluno aluno, Aula aula) {
+        Set<Curso> autorizados = aula.getCursosAutorizados();
+        if (autorizados.isEmpty()) {
+            return;
+        }
+        if (aluno.getCurso() == null || !autorizados.contains(aluno.getCurso())) {
+            throw new CursoNaoAutorizadoException(
+                    "Aula não autorizada para o curso do aluno");
+        }
     }
 
     private void validarChoqueHorario(Long alunoId, Aula aula) {

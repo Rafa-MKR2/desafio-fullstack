@@ -1,7 +1,10 @@
 package com.desafio.dto;
 
 import com.desafio.entity.Aula;
+import com.desafio.entity.Curso;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+import java.util.List;
 
 @Schema(description = "Aula com os dados de disciplina, professor e horário")
 public class AulaResponse {
@@ -18,6 +21,8 @@ public class AulaResponse {
     private Integer vagas;
     private long vagasOcupadas;
     private long vagasRestantes;
+    private List<Long> cursoIds;
+    private boolean ativo;
 
     public AulaResponse() {
     }
@@ -40,6 +45,11 @@ public class AulaResponse {
         response.setVagas(aula.getVagas());
         response.setVagasOcupadas(vagasOcupadas);
         response.setVagasRestantes(aula.getVagas() - vagasOcupadas);
+        response.setCursoIds(aula.getCursosAutorizados().stream()
+                .map(Curso::getId)
+                .sorted()
+                .toList());
+        response.setAtivo(aula.isAtivo());
         return response;
     }
 
@@ -137,5 +147,21 @@ public class AulaResponse {
 
     public void setVagasRestantes(long vagasRestantes) {
         this.vagasRestantes = vagasRestantes;
+    }
+
+    public List<Long> getCursoIds() {
+        return cursoIds;
+    }
+
+    public void setCursoIds(List<Long> cursoIds) {
+        this.cursoIds = cursoIds;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
     }
 }

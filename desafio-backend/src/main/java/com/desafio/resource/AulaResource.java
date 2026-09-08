@@ -58,13 +58,17 @@ public class AulaResource {
 
     @GET
     @Operation(summary = "Lista aulas",
-            description = "Retorna todas as aulas, opcionalmente filtradas por disciplina, professor e dia da semana")
+            description = "Retorna todas as aulas ativas, opcionalmente filtradas por disciplina, professor, dia da semana, curso, horário e disponibilidade de vagas")
     @APIResponse(responseCode = "200", description = "Lista de aulas",
             content = @Content(schema = @Schema(implementation = AulaResponse.class)))
     public List<AulaResponse> listar(@QueryParam("disciplinaId") Long disciplinaId,
                                      @QueryParam("professorId") Long professorId,
-                                     @QueryParam("diaSemana") String diaSemana) {
-        List<Aula> aulas = aulaService.listarComFiltros(disciplinaId, professorId, diaSemana);
+                                     @QueryParam("diaSemana") String diaSemana,
+                                     @QueryParam("cursoId") Long cursoId,
+                                     @QueryParam("horarioId") Long horarioId,
+                                     @QueryParam("vagasDisponiveis") Boolean vagasDisponiveis) {
+        List<Aula> aulas = aulaService.listarComFiltros(
+                disciplinaId, professorId, diaSemana, cursoId, horarioId, vagasDisponiveis);
         Map<Long, Long> matriculados = aulaService.contarMatriculadosPorAula(
                 aulas.stream().map(Aula::getId).toList());
         return aulas.stream()

@@ -2,12 +2,14 @@ package com.desafio.service;
 
 import com.desafio.dto.AulaRequest;
 import com.desafio.entity.Aula;
+import com.desafio.entity.Curso;
 import com.desafio.entity.Disciplina;
 import com.desafio.entity.Horario;
 import com.desafio.entity.Professor;
 import com.desafio.exception.NotFoundException;
 import com.desafio.exception.ProfessorConflitanteException;
 import com.desafio.repository.AulaRepository;
+import com.desafio.repository.CursoRepository;
 import com.desafio.repository.DisciplinaRepository;
 import com.desafio.repository.HorarioRepository;
 import com.desafio.repository.MatriculaRepository;
@@ -17,8 +19,11 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @ApplicationScoped
 public class AulaService {
@@ -36,6 +41,9 @@ public class AulaService {
     HorarioRepository horarioRepository;
 
     @Inject
+    CursoRepository cursoRepository;
+
+    @Inject
     MatriculaRepository matriculaRepository;
 
     @Transactional
@@ -48,6 +56,7 @@ public class AulaService {
         aula.setProfessor(professorRepository.findById(request.getProfessorId()));
         aula.setHorario(horarioRepository.findById(request.getHorarioId()));
         aula.setVagas(request.getVagas());
+        aula.setCursosAutorizados(validarCursos(request));
 
         aulaRepository.persist(aula);
         return aula;
@@ -66,6 +75,7 @@ public class AulaService {
         aula.setDisciplina(disciplinaRepository.findById(request.getDisciplinaId()));
         aula.setProfessor(professorRepository.findById(request.getProfessorId()));
         aula.setHorario(horarioRepository.findById(request.getHorarioId()));
+        aula.setCursosAutorizados(validarCursos(request));
 
         Integer totalMatriculados = Math.toIntExact(matriculaRepository.countByAula(aulaId));
         if (request.getVagas() < totalMatriculados) {
@@ -89,23 +99,27 @@ public class AulaService {
             throw new IllegalStateException("Não é possível excluir uma aula com matrículas vinculadas");
         }
 
-        aulaRepository.delete(aula);
+        // Exclusão lógica: a aula deixa de aparecer e de aceitar matrículas.
+        aula.setAtivo(false);
+        aulaRepository.persist(aula);
     }
 
     public Aula buscarPorId(Long aulaId) {
         Aula aula = aulaRepository.findById(aulaId);
-        if (aula == null) {
+        if (aula == null || !aula.isAtivo()) {
             throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
         return aula;
     }
 
     public List<Aula> listarTodos() {
-        return aulaRepository.listAll();
+        return aulaRepository.listarAtivas();
     }
 
-    public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana) {
-        return aulaRepository.listarComFiltros(disciplinaId, professorId, diaSemana);
+    public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana,
+                                       Long cursoId, Long horarioId, Boolean vagasDisponiveis) {
+        return aulaRepository.listarComFiltros(
+                disciplinaId, professorId, diaSemana, cursoId, horarioId, vagasDisponiveis);
     }
 
     public List<Aula> listarPorDisciplina(Long disciplinaId) {
@@ -161,5 +175,24 @@ public class AulaService {
             throw new ProfessorConflitanteException(
                     "Professor já possui aula neste horário (aula: " + conflitante.getId() + ")");
         }
+    }
+
+    /**
+     * Resolve os cursos autorizados da aula a partir do request. Ausência de
+     * cursoIds significa que a aula é aberta a todos os cursos.
+     */
+    private Set<Curso> validarCursos(AulaRequest request) {
+        if (request.getCursoIds() == null || request.getCursoIds().isEmpty()) {
+            return new HashSet<>();
+        }
+        Set<Curso> cursos = new LinkedHashSet<>();
+        for (Long cursoId : request.getCursoIds()) {
+            Curso curso = cursoRepository.findById(cursoId);
+            if (curso == null) {
+                throw new IllegalArgumentException("Curso não encontrado: " + cursoId);
+            }
+            cursos.add(curso);
+        }
+        return cursos;
     }
 }
