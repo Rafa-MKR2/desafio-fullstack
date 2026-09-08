@@ -1,5 +1,7 @@
 package com.desafio.integration;
 
+import com.desafio.dto.AulaRequest;
+import com.desafio.service.AulaService;
 import com.desafio.service.MatriculaService;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
@@ -20,6 +22,9 @@ class AulaResourceIntegrationTest {
 
     @Inject
     MatriculaService matriculaService;
+
+    @Inject
+    AulaService aulaService;
 
     @BeforeEach
     void setUp() {
@@ -323,4 +328,33 @@ class AulaResourceIntegrationTest {
                 .body("code", equalTo("not_found"));
     }
 
+    @Test
+    @TestSecurity(user = "coordenador2@email.com", roles = "coordenador")
+    void coordenadorNaoAcessaNemAtualizaAulaDeOutro() {
+        // Cria uma aula pertencente ao coordenador1 (chamada direta ao serviço).
+        AulaRequest request = new AulaRequest();
+        request.setDisciplinaId(seeder.disciplinaId("Matemática"));
+        request.setProfessorId(seeder.professorId("Ana Paula"));
+        request.setHorarioId(seeder.horarioId("Segunda", "08:00", "10:00"));
+        request.setVagas(5);
+        Long aulaId = aulaService.criar(request, seeder.coordenadorId("coordenador1@email.com")).getId();
+
+        // Autenticado como coordenador2: não vê nem atualiza a aula de outro.
+        given()
+                .when().get("/aulas/" + aulaId)
+                .then()
+                .statusCode(404)
+                .body("code", equalTo("not_found"));
+
+        given()
+                .contentType("application/json")
+                .body("""
+                        {"disciplinaId": %d, "professorId": %d, "horarioId": %d, "vagas": 9}
+                        """.formatted(
+                        seeder.disciplinaId("Matemática"), seeder.professorId("Ana Paula"),
+                        seeder.horarioId("Segunda", "08:00", "10:00")))
+                .when().put("/aulas/" + aulaId)
+                .then()
+                .statusCode(404);
+    }
 }

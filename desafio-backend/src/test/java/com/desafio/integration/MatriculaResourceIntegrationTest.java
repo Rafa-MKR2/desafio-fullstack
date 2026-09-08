@@ -43,7 +43,7 @@ class MatriculaResourceIntegrationTest {
         request.setProfessorId(seeder.professorId(professor));
         request.setHorarioId(seeder.horarioId(dia, "08:00", "10:00"));
         request.setVagas(vagas);
-        return aulaService.criar(request).getId();
+        return aulaService.criar(request, seeder.coordenadorId("coordenador1@email.com")).getId();
     }
 
     private Long criarAulaSobreposta(String disciplina, String professor, int vagas) {
@@ -53,7 +53,7 @@ class MatriculaResourceIntegrationTest {
         // Segunda 09:00-11:00 cruza com 08:00-10:00.
         request.setHorarioId(seeder.horarioId("Segunda", "09:00", "11:00"));
         request.setVagas(vagas);
-        return aulaService.criar(request).getId();
+        return aulaService.criar(request, seeder.coordenadorId("coordenador1@email.com")).getId();
     }
 
     private Long criarAulaComCursoAutorizado(String disciplina, String professor, String curso, int vagas) {
@@ -63,7 +63,7 @@ class MatriculaResourceIntegrationTest {
         request.setHorarioId(seeder.horarioId("Segunda", "08:00", "10:00"));
         request.setVagas(vagas);
         request.setCursoIds(List.of(seeder.cursoId(curso)));
-        return aulaService.criar(request).getId();
+        return aulaService.criar(request, seeder.coordenadorId("coordenador1@email.com")).getId();
     }
 
     @Test
@@ -205,7 +205,7 @@ class MatriculaResourceIntegrationTest {
         request.setProfessorId(seeder.professorId("Carlos Alberto"));
         request.setHorarioId(seeder.horarioId("Terça", "08:00", "10:00"));
         request.setVagas(10);
-        Aula aulaTerca = aulaService.criar(request);
+        Aula aulaTerca = aulaService.criar(request, seeder.coordenadorId("coordenador1@email.com"));
 
         given().contentType("application/json")
                 .body("""

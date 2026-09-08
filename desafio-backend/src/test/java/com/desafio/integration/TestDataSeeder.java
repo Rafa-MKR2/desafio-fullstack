@@ -68,6 +68,7 @@ public class TestDataSeeder {
         novoHorario("Quarta", "10:00", "12:00");
 
         novoCoordenador("Dr. José", "coordenador1@email.com", computacao);
+        novoCoordenador("Profa. Maria", "coordenador2@email.com", engenharia);
         novoAluno("João Silva", "aluno1@email.com", computacao);
         novoAluno("Maria Santos", "aluno2@email.com", computacao);
         novoAluno("Pedro Costa", "aluno3@email.com", engenharia);
@@ -92,6 +93,10 @@ public class TestDataSeeder {
 
     public Long alunoId(String email) {
         return alunoRepository.findByEmail(email).orElseThrow().getId();
+    }
+
+    public Long coordenadorId(String email) {
+        return coordenadorRepository.findByEmail(email).orElseThrow().getId();
     }
 
     private Curso novoCurso(String nome) {
