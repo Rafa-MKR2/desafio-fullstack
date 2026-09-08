@@ -22,6 +22,7 @@ public class AulaResponse {
     private long vagasOcupadas;
     private long vagasRestantes;
     private List<Long> cursoIds;
+    private boolean ativo;
 
     public AulaResponse() {
     }
@@ -48,6 +49,7 @@ public class AulaResponse {
                 .map(Curso::getId)
                 .sorted()
                 .toList());
+        response.setAtivo(aula.isAtivo());
         return response;
     }
 
@@ -153,5 +155,13 @@ public class AulaResponse {
 
     public void setCursoIds(List<Long> cursoIds) {
         this.cursoIds = cursoIds;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
     }
 }

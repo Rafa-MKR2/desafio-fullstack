@@ -171,6 +171,59 @@ class AulaResourceIntegrationTest {
     }
 
     @Test
+    @TestSecurity(user = "coordenador1@email.com", roles = "coordenador")
+    void listarPorCursoAutorizadoRetornaSomenteAulasDaqueleCurso() {
+        Long computacao = seeder.cursoId("Ciência da Computação");
+        Long engenharia = seeder.cursoId("Engenharia Civil");
+
+        // Aula autorizada só para Computação.
+        given().contentType("application/json")
+                .body("""
+                        {"disciplinaId": %d, "professorId": %d, "horarioId": %d, "vagas": 30, "cursoIds": [%d]}
+                        """.formatted(
+                        seeder.disciplinaId("Matemática"), seeder.professorId("Ana Paula"),
+                        seeder.horarioId("Segunda", "08:00", "10:00"), computacao))
+                .when().post("/aulas").then().statusCode(201);
+
+        // Aula autorizada só para Engenharia.
+        given().contentType("application/json")
+                .body("""
+                        {"disciplinaId": %d, "professorId": %d, "horarioId": %d, "vagas": 20, "cursoIds": [%d]}
+                        """.formatted(
+                        seeder.disciplinaId("Português"), seeder.professorId("Carlos Alberto"),
+                        seeder.horarioId("Terça", "08:00", "10:00"), engenharia))
+                .when().post("/aulas").then().statusCode(201);
+
+        given()
+                .queryParam("cursoId", computacao)
+                .when().get("/aulas")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(1))
+                .body("[0].disciplinaNome", equalTo("Matemática"));
+    }
+
+    @Test
+    @TestSecurity(user = "coordenador1@email.com", roles = "coordenador")
+    void listarPorVagasDisponiveisRetornaSomenteAulasComVaga() {
+        Long aulaCheia = criarAulaComoCoordenador(
+                seeder.disciplinaId("Matemática"), seeder.professorId("Ana Paula"),
+                seeder.horarioId("Segunda", "08:00", "10:00"), 1);
+        matriculaService.matricular(seeder.alunoId("aluno1@email.com"), aulaCheia);
+        criarAulaComoCoordenador(
+                seeder.disciplinaId("Português"), seeder.professorId("Carlos Alberto"),
+                seeder.horarioId("Terça", "08:00", "10:00"), 25);
+
+        given()
+                .queryParam("vagasDisponiveis", true)
+                .when().get("/aulas")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(1))
+                .body("[0].disciplinaNome", equalTo("Português"));
+    }
+
+    @Test
     @TestSecurity(user = "aluno1@email.com", roles = "aluno")
     void buscarAulaInexistenteRetorna404() {
         given()
@@ -249,6 +302,25 @@ class AulaResourceIntegrationTest {
         given()
                 .when().delete("/aulas/" + aulaId)
                 .then().statusCode(204);
+    }
+
+    @Test
+    @TestSecurity(user = "coordenador1@email.com", roles = "coordenador")
+    void exclusaoLogicaRemoveDaListagemEBusca() {
+        Long aulaId = criarAulaComoCoordenador(
+                seeder.disciplinaId("Matemática"), seeder.professorId("Ana Paula"),
+                seeder.horarioId("Segunda", "08:00", "10:00"), 5);
+
+        given().when().delete("/aulas/" + aulaId).then().statusCode(204);
+
+        // A aula excluída não aparece na listagem nem é buscável por id.
+        given().when().get("/aulas").then()
+                .statusCode(200)
+                .body("size()", equalTo(0));
+
+        given().when().get("/aulas/" + aulaId).then()
+                .statusCode(404)
+                .body("code", equalTo("not_found"));
     }
 
 }

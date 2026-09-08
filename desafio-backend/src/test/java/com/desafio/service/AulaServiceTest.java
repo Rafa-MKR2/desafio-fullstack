@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -218,16 +219,19 @@ class AulaServiceTest {
     }
 
     @Test
-    void excluirSemMatriculasDeleta() {
+    void excluirSemMatriculasMarcaComoInativo() {
         Aula aulaExistente = new Aula();
         aulaExistente.setId(10L);
+        aulaExistente.setAtivo(true);
 
         when(aulaRepository.findById(10L)).thenReturn(aulaExistente);
         when(matriculaRepository.countByAula(10L)).thenReturn(0L);
 
         service.excluir(10L);
 
-        verify(aulaRepository).delete(aulaExistente);
+        assertFalse(aulaExistente.isAtivo());
+        verify(aulaRepository).persist(aulaExistente);
+        verify(aulaRepository, never()).delete(any(Aula.class));
     }
 
     @Test

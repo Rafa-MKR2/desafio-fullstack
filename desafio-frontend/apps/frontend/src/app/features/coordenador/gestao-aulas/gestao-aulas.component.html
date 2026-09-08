@@ -155,6 +155,24 @@
             }
           </select>
         </label>
+
+        <label class="campo-label">
+          Curso autorizado
+          <select class="campo-select" [ngModel]="filtroCursoId()" (ngModelChange)="mudarFiltroCurso($event)">
+            <option [ngValue]="null">Todos</option>
+            @for (curso of cursos(); track curso.id) {
+              <option [ngValue]="curso.id">{{ curso.nome }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="campo-label">
+          Vagas
+          <select class="campo-select" [ngModel]="filtroVagasDisponiveis()" (ngModelChange)="mudarFiltroVagas($event)">
+            <option [ngValue]="null">Todas</option>
+            <option [ngValue]="true">Só com vaga</option>
+          </select>
+        </label>
       </div>
 
       <button class="botao" type="button" (click)="limparFiltros()">

@@ -40,7 +40,7 @@ public class MatriculaService {
         }
 
         Aula aula = aulaRepository.findById(aulaId, LockModeType.PESSIMISTIC_WRITE);
-        if (aula == null) {
+        if (aula == null || !aula.isAtivo()) {
             throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
 

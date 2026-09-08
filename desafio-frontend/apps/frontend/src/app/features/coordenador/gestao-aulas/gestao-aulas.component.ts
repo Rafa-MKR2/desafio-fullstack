@@ -53,6 +53,8 @@ export class GestaoAulasComponent implements OnInit {
   filtroDisciplinaId = signal<number | null>(null);
   filtroProfessorId = signal<number | null>(null);
   filtroDia = signal<string | null>(null);
+  filtroCursoId = signal<number | null>(null);
+  filtroVagasDisponiveis = signal<boolean | null>(null);
 
   formAberto = signal(false);
   aulaEditando = signal<Aula | null>(null);
@@ -128,6 +130,8 @@ export class GestaoAulasComponent implements OnInit {
         disciplinaId: this.filtroDisciplinaId(),
         professorId: this.filtroProfessorId(),
         diaSemana: this.filtroDia(),
+        cursoId: this.filtroCursoId(),
+        vagasDisponiveis: this.filtroVagasDisponiveis(),
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -159,10 +163,22 @@ export class GestaoAulasComponent implements OnInit {
     this.carregarAulas();
   }
 
+  mudarFiltroCurso(valor: number | null): void {
+    this.filtroCursoId.set(valor);
+    this.carregarAulas();
+  }
+
+  mudarFiltroVagas(disponiveis: boolean): void {
+    this.filtroVagasDisponiveis.set(disponiveis);
+    this.carregarAulas();
+  }
+
   limparFiltros(): void {
     this.filtroDisciplinaId.set(null);
     this.filtroProfessorId.set(null);
     this.filtroDia.set(null);
+    this.filtroCursoId.set(null);
+    this.filtroVagasDisponiveis.set(null);
     this.carregarAulas();
   }
 
