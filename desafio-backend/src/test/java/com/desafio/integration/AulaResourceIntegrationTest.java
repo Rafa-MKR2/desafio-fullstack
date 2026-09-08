@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
@@ -58,6 +59,27 @@ class AulaResourceIntegrationTest {
                 .body("vagas", equalTo(30))
                 .body("vagasOcupadas", equalTo(0))
                 .body("vagasRestantes", equalTo(30));
+    }
+
+    @Test
+    @TestSecurity(user = "coordenador1@email.com", roles = "coordenador")
+    void criarAulaComCursosAutorizadosRetornaCursosNaResposta() {
+        Long computacao = seeder.cursoId("Ciência da Computação");
+        Long engenharia = seeder.cursoId("Engenharia Civil");
+
+        given()
+                .contentType("application/json")
+                .body("""
+                        {"disciplinaId": %d, "professorId": %d, "horarioId": %d, "vagas": 30, "cursoIds": [%d, %d]}
+                        """.formatted(
+                        seeder.disciplinaId("Matemática"),
+                        seeder.professorId("Ana Paula"),
+                        seeder.horarioId("Segunda", "08:00", "10:00"),
+                        computacao, engenharia))
+                .when().post("/aulas")
+                .then()
+                .statusCode(201)
+                .body("cursoIds", hasItems(computacao.intValue(), engenharia.intValue()));
     }
 
     @Test

@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { Aula, AulaPayload } from '../../../shared/models/aula';
 import type {
+  Curso,
   Disciplina,
   Horario,
   Professor,
@@ -46,6 +47,7 @@ export class GestaoAulasComponent implements OnInit {
   disciplinas = signal<Disciplina[]>([]);
   professores = signal<Professor[]>([]);
   horarios = signal<Horario[]>([]);
+  cursos = signal<Curso[]>([]);
   dias = signal<string[]>([]);
 
   filtroDisciplinaId = signal<number | null>(null);
@@ -63,6 +65,7 @@ export class GestaoAulasComponent implements OnInit {
   formProfessorId = signal<number | null>(null);
   formHorarioId = signal<number | null>(null);
   formVagas = signal<number | null>(null);
+  formCursoIds = signal<number[]>([]);
 
   /** Total de vagas oferecidas nas aulas listadas. */
   readonly vagasTotais = computed(() =>
@@ -110,6 +113,11 @@ export class GestaoAulasComponent implements OnInit {
           this.dias.set([...new Set(horarios.map((h) => h.diaSemana))]);
         },
       });
+
+    this.catalogoService
+      .listarCursos()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (cursos) => this.cursos.set(cursos) });
   }
 
   carregarAulas(): void {
@@ -164,6 +172,7 @@ export class GestaoAulasComponent implements OnInit {
     this.formProfessorId.set(null);
     this.formHorarioId.set(null);
     this.formVagas.set(null);
+    this.formCursoIds.set([]);
     this.formAberto.set(true);
   }
 
@@ -173,6 +182,7 @@ export class GestaoAulasComponent implements OnInit {
     this.formProfessorId.set(aula.professorId);
     this.formHorarioId.set(aula.horarioId);
     this.formVagas.set(aula.vagas);
+    this.formCursoIds.set(aula.cursoIds ?? []);
     this.formAberto.set(true);
   }
 
@@ -185,6 +195,15 @@ export class GestaoAulasComponent implements OnInit {
     this.formDisciplinaId.set(valor);
     // Professor deve lecionar a disciplina escolhida.
     this.formProfessorId.set(null);
+  }
+
+  alternarCurso(id: number, selecionado: boolean): void {
+    const atuais = this.formCursoIds();
+    this.formCursoIds.set(
+      selecionado
+        ? [...new Set([...atuais, id])]
+        : atuais.filter((c) => c !== id),
+    );
   }
 
   salvar(): void {
@@ -217,11 +236,13 @@ export class GestaoAulasComponent implements OnInit {
     }
 
     this.salvando.set(true);
+    const cursoIds = this.formCursoIds();
     const payload: AulaPayload = {
       disciplinaId,
       professorId,
       horarioId,
       vagas,
+      ...(cursoIds.length > 0 ? { cursoIds } : {}),
     };
     const operacao =
       editando != null

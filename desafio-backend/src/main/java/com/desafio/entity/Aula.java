@@ -6,9 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "aula")
@@ -33,6 +37,13 @@ public class Aula {
     @Column(nullable = false)
     private Integer vagas;
 
+    @ManyToMany
+    @JoinTable(
+            name = "aula_curso",
+            joinColumns = @JoinColumn(name = "aula_id"),
+            inverseJoinColumns = @JoinColumn(name = "curso_id"))
+    private Set<Curso> cursosAutorizados = new HashSet<>();
+
     @Version
     private Long version;
 
@@ -42,6 +53,14 @@ public class Aula {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Set<Curso> getCursosAutorizados() {
+        return cursosAutorizados;
+    }
+
+    public void setCursosAutorizados(Set<Curso> cursosAutorizados) {
+        this.cursosAutorizados = cursosAutorizados;
     }
 
     public Disciplina getDisciplina() {

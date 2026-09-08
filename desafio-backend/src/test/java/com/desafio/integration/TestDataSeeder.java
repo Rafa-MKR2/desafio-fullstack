@@ -48,7 +48,7 @@ public class TestDataSeeder {
     @Transactional
     public void resetarBase() {
         em.createNativeQuery(
-                "TRUNCATE TABLE matricula, aula, professor_disciplina, aluno, " +
+                "TRUNCATE TABLE matricula, aula_curso, aula, professor_disciplina, aluno, " +
                 "coordenador, professor, horario, disciplina, curso RESTART IDENTITY CASCADE")
                 .executeUpdate();
 
