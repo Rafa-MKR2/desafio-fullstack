@@ -30,4 +30,7 @@ export interface FiltrosAulas {
   disciplinaId?: number | null;
   professorId?: number | null;
   diaSemana?: string | null;
+  cursoId?: number | null;
+  horarioId?: number | null;
+  vagasDisponiveis?: boolean | null;
 }

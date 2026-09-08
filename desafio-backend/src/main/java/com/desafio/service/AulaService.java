@@ -116,8 +116,10 @@ public class AulaService {
         return aulaRepository.listarAtivas();
     }
 
-    public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana) {
-        return aulaRepository.listarComFiltros(disciplinaId, professorId, diaSemana);
+    public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana,
+                                       Long cursoId, Long horarioId, Boolean vagasDisponiveis) {
+        return aulaRepository.listarComFiltros(
+                disciplinaId, professorId, diaSemana, cursoId, horarioId, vagasDisponiveis);
     }
 
     public List<Aula> listarPorDisciplina(Long disciplinaId) {

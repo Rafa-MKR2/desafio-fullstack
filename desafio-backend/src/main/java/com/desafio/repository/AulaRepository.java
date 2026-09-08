@@ -3,6 +3,7 @@ package com.desafio.repository;
 import com.desafio.entity.Aula;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.TypedQuery;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,25 +21,44 @@ public class AulaRepository implements PanacheRepository<Aula> {
         return list("ativo = true and professor.id", professorId);
     }
 
-    public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana) {
+    public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana,
+                                       Long cursoId, Long horarioId, Boolean vagasDisponiveis) {
+        StringBuilder jpql = new StringBuilder("SELECT a FROM Aula a ");
         Map<String, Object> params = new HashMap<>();
         List<String> clausulas = new ArrayList<>();
-        clausulas.add("ativo = true");
+        clausulas.add("a.ativo = true");
 
+        if (cursoId != null) {
+            jpql.append("JOIN a.cursosAutorizados c ");
+            clausulas.add("c.id = :cursoId");
+            params.put("cursoId", cursoId);
+        }
         if (disciplinaId != null) {
-            clausulas.add("disciplina.id = :disciplinaId");
+            clausulas.add("a.disciplina.id = :disciplinaId");
             params.put("disciplinaId", disciplinaId);
         }
         if (professorId != null) {
-            clausulas.add("professor.id = :professorId");
+            clausulas.add("a.professor.id = :professorId");
             params.put("professorId", professorId);
         }
         if (diaSemana != null && !diaSemana.isBlank()) {
-            clausulas.add("lower(horario.diaSemana) = :diaSemana");
+            clausulas.add("lower(a.horario.diaSemana) = :diaSemana");
             params.put("diaSemana", diaSemana.toLowerCase());
         }
+        if (horarioId != null) {
+            clausulas.add("a.horario.id = :horarioId");
+            params.put("horarioId", horarioId);
+        }
+        if (Boolean.TRUE.equals(vagasDisponiveis)) {
+            // Apenas aulas com vaga restante (vagas > nº de matriculados).
+            clausulas.add("size(a.matriculas) < a.vagas");
+        }
 
-        return list(String.join(" and ", clausulas) + " order by id", params);
+        jpql.append("WHERE ").append(String.join(" and ", clausulas)).append(" order by a.id");
+
+        TypedQuery<Aula> query = getEntityManager().createQuery(jpql.toString(), Aula.class);
+        params.forEach(query::setParameter);
+        return query.getResultList();
     }
 
     public List<Aula> listarPorProfessorMesmoHorario(Long professorId, String diaSemana,

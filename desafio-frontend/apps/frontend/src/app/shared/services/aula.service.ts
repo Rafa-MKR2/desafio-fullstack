@@ -21,6 +21,15 @@ export class AulaService {
     if (filtros.diaSemana != null && filtros.diaSemana.trim() !== '') {
       params = params.set('diaSemana', filtros.diaSemana.trim());
     }
+    if (filtros.cursoId != null) {
+      params = params.set('cursoId', String(filtros.cursoId));
+    }
+    if (filtros.horarioId != null) {
+      params = params.set('horarioId', String(filtros.horarioId));
+    }
+    if (filtros.vagasDisponiveis != null) {
+      params = params.set('vagasDisponiveis', String(filtros.vagasDisponiveis));
+    }
     return this.http.get<Aula[]>(`${this.apiUrl}/aulas`, { params });
   }
 

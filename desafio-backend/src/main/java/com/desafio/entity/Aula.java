@@ -9,9 +9,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -47,6 +50,9 @@ public class Aula {
     @Column(nullable = false)
     private boolean ativo = true;
 
+    @OneToMany(mappedBy = "aula")
+    private List<Matricula> matriculas = new ArrayList<>();
+
     @Version
     private Long version;
 
@@ -56,6 +62,14 @@ public class Aula {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public List<Matricula> getMatriculas() {
+        return matriculas;
+    }
+
+    public void setMatriculas(List<Matricula> matriculas) {
+        this.matriculas = matriculas;
     }
 
     public boolean isAtivo() {
