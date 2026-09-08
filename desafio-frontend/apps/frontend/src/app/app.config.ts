@@ -2,8 +2,11 @@ import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
+import { providePrimeNG } from 'primeng/config';
+import Aura from '@primeng/themes/aura';
 import {
   AutoRefreshTokenService,
   INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
@@ -24,6 +27,7 @@ const apiUrlPattern = new RegExp(`^${escapeRegExp(environment.apiUrl)}`);
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideAnimationsAsync(),
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
     provideHttpClient(withInterceptors([includeBearerTokenInterceptor])),
@@ -45,5 +49,6 @@ export const appConfig: ApplicationConfig = {
       // Dependências do withAutoRefreshToken (exigidas pelo keycloak-angular v22).
       providers: [AutoRefreshTokenService, UserActivityService],
     }),
+    providePrimeNG({ theme: { preset: Aura } }),
   ],
 };

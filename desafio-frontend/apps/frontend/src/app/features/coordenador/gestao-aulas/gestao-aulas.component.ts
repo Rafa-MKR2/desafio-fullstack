@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Tag } from 'primeng/tag';
 import type { Aula, AulaPayload } from '../../../shared/models/aula';
 import type {
   Curso,
@@ -32,7 +33,7 @@ interface Mensagem {
  */
 @Component({
   selector: 'app-gestao-aulas',
-  imports: [FormsModule],
+  imports: [FormsModule, Tag],
   templateUrl: './gestao-aulas.component.html',
   styleUrl: './gestao-aulas.component.css',
 })

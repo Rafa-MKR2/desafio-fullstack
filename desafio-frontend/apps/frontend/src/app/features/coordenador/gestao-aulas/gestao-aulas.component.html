@@ -209,7 +209,7 @@
                 </td>
                 <td>{{ aula.professorNome }}</td>
                 <td>
-                  <span class="selo selo-dia">{{ aula.horarioDiaSemana }}</span>
+                  <p-tag [value]="aula.horarioDiaSemana" severity="secondary" />
                   <span class="horario">{{ aula.horarioHoraInicio }}–{{ aula.horarioHoraFim }}</span>
                 </td>
                 <td>
