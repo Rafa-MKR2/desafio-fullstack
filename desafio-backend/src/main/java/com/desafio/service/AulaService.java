@@ -99,19 +99,21 @@ public class AulaService {
             throw new IllegalStateException("Não é possível excluir uma aula com matrículas vinculadas");
         }
 
-        aulaRepository.delete(aula);
+        // Exclusão lógica: a aula deixa de aparecer e de aceitar matrículas.
+        aula.setAtivo(false);
+        aulaRepository.persist(aula);
     }
 
     public Aula buscarPorId(Long aulaId) {
         Aula aula = aulaRepository.findById(aulaId);
-        if (aula == null) {
+        if (aula == null || !aula.isAtivo()) {
             throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
         return aula;
     }
 
     public List<Aula> listarTodos() {
-        return aulaRepository.listAll();
+        return aulaRepository.listarAtivas();
     }
 
     public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana) {

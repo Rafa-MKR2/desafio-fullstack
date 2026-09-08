@@ -251,4 +251,23 @@ class AulaResourceIntegrationTest {
                 .then().statusCode(204);
     }
 
+    @Test
+    @TestSecurity(user = "coordenador1@email.com", roles = "coordenador")
+    void exclusaoLogicaRemoveDaListagemEBusca() {
+        Long aulaId = criarAulaComoCoordenador(
+                seeder.disciplinaId("Matemática"), seeder.professorId("Ana Paula"),
+                seeder.horarioId("Segunda", "08:00", "10:00"), 5);
+
+        given().when().delete("/aulas/" + aulaId).then().statusCode(204);
+
+        // A aula excluída não aparece na listagem nem é buscável por id.
+        given().when().get("/aulas").then()
+                .statusCode(200)
+                .body("size()", equalTo(0));
+
+        given().when().get("/aulas/" + aulaId).then()
+                .statusCode(404)
+                .body("code", equalTo("not_found"));
+    }
+
 }

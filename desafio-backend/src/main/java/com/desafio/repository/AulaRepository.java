@@ -2,7 +2,6 @@ package com.desafio.repository;
 
 import com.desafio.entity.Aula;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.ArrayList;
@@ -14,16 +13,17 @@ import java.util.Map;
 public class AulaRepository implements PanacheRepository<Aula> {
 
     public List<Aula> listarPorDisciplina(Long disciplinaId) {
-        return list("disciplina.id", disciplinaId);
+        return list("ativo = true and disciplina.id", disciplinaId);
     }
 
     public List<Aula> listarPorProfessor(Long professorId) {
-        return list("professor.id", professorId);
+        return list("ativo = true and professor.id", professorId);
     }
 
     public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana) {
         Map<String, Object> params = new HashMap<>();
         List<String> clausulas = new ArrayList<>();
+        clausulas.add("ativo = true");
 
         if (disciplinaId != null) {
             clausulas.add("disciplina.id = :disciplinaId");
@@ -38,9 +38,6 @@ public class AulaRepository implements PanacheRepository<Aula> {
             params.put("diaSemana", diaSemana.toLowerCase());
         }
 
-        if (clausulas.isEmpty()) {
-            return listAll(Sort.by("id"));
-        }
         return list(String.join(" and ", clausulas) + " order by id", params);
     }
 
@@ -48,7 +45,8 @@ public class AulaRepository implements PanacheRepository<Aula> {
                                                      String horaInicio, String horaFim) {
         return getEntityManager()
                 .createQuery(
-                        "SELECT a FROM Aula a WHERE a.professor.id = :professorId " +
+                        "SELECT a FROM Aula a WHERE a.ativo = true " +
+                        "AND a.professor.id = :professorId " +
                         "AND a.horario.diaSemana = :diaSemana " +
                         "AND a.horario.horaInicio < :horaFim " +
                         "AND a.horario.horaFim > :horaInicio",
@@ -58,5 +56,9 @@ public class AulaRepository implements PanacheRepository<Aula> {
                 .setParameter("horaInicio", horaInicio)
                 .setParameter("horaFim", horaFim)
                 .getResultList();
+    }
+
+    public List<Aula> listarAtivas() {
+        return list("ativo = true order by id");
     }
 }

@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS aula (
     professor_id  BIGINT NOT NULL REFERENCES professor(id),
     horario_id    BIGINT NOT NULL REFERENCES horario(id),
     vagas         INTEGER NOT NULL,
+    ativo         BOOLEAN NOT NULL DEFAULT TRUE,
     version       BIGINT NOT NULL DEFAULT 0
 );
 

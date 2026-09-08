@@ -44,6 +44,9 @@ public class Aula {
             inverseJoinColumns = @JoinColumn(name = "curso_id"))
     private Set<Curso> cursosAutorizados = new HashSet<>();
 
+    @Column(nullable = false)
+    private boolean ativo = true;
+
     @Version
     private Long version;
 
@@ -53,6 +56,14 @@ public class Aula {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
     }
 
     public Set<Curso> getCursosAutorizados() {
