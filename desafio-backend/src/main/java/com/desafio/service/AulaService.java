@@ -2,6 +2,7 @@ package com.desafio.service;
 
 import com.desafio.dto.AulaRequest;
 import com.desafio.entity.Aula;
+import com.desafio.entity.Coordenador;
 import com.desafio.entity.Curso;
 import com.desafio.entity.Disciplina;
 import com.desafio.entity.Horario;
@@ -9,6 +10,7 @@ import com.desafio.entity.Professor;
 import com.desafio.exception.NotFoundException;
 import com.desafio.exception.ProfessorConflitanteException;
 import com.desafio.repository.AulaRepository;
+import com.desafio.repository.CoordenadorRepository;
 import com.desafio.repository.CursoRepository;
 import com.desafio.repository.DisciplinaRepository;
 import com.desafio.repository.HorarioRepository;
@@ -44,14 +46,22 @@ public class AulaService {
     CursoRepository cursoRepository;
 
     @Inject
+    CoordenadorRepository coordenadorRepository;
+
+    @Inject
     MatriculaRepository matriculaRepository;
 
     @Transactional
-    public Aula criar(AulaRequest request) {
+    public Aula criar(AulaRequest request, Long coordenadorId) {
+        Coordenador coordenador = coordenadorRepository.findById(coordenadorId);
+        if (coordenador == null) {
+            throw new NotFoundException("Coordenador não encontrado: " + coordenadorId);
+        }
         validarReferencias(request);
         validarConflitoProfessor(null, request);
 
         Aula aula = new Aula();
+        aula.setCoordenador(coordenador);
         aula.setDisciplina(disciplinaRepository.findById(request.getDisciplinaId()));
         aula.setProfessor(professorRepository.findById(request.getProfessorId()));
         aula.setHorario(horarioRepository.findById(request.getHorarioId()));
@@ -63,11 +73,12 @@ public class AulaService {
     }
 
     @Transactional
-    public Aula atualizar(Long aulaId, AulaRequest request) {
+    public Aula atualizar(Long aulaId, AulaRequest request, Long coordenadorId) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null) {
             throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
+        validarDono(aula, coordenadorId);
 
         validarReferencias(request);
         validarConflitoProfessor(aulaId, request);
@@ -89,11 +100,12 @@ public class AulaService {
     }
 
     @Transactional
-    public void excluir(Long aulaId) {
+    public void excluir(Long aulaId, Long coordenadorId) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null) {
             throw new NotFoundException("Aula não encontrada: " + aulaId);
         }
+        validarDono(aula, coordenadorId);
 
         if (matriculaRepository.countByAula(aulaId) > 0) {
             throw new IllegalStateException("Não é possível excluir uma aula com matrículas vinculadas");
@@ -104,10 +116,13 @@ public class AulaService {
         aulaRepository.persist(aula);
     }
 
-    public Aula buscarPorId(Long aulaId) {
+    public Aula buscarPorId(Long aulaId, Long coordenadorId) {
         Aula aula = aulaRepository.findById(aulaId);
         if (aula == null || !aula.isAtivo()) {
             throw new NotFoundException("Aula não encontrada: " + aulaId);
+        }
+        if (coordenadorId != null) {
+            validarDono(aula, coordenadorId);
         }
         return aula;
     }
@@ -117,9 +132,11 @@ public class AulaService {
     }
 
     public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana,
-                                       Long cursoId, Long horarioId, Boolean vagasDisponiveis) {
+                                       Long cursoId, Long horarioId, Boolean vagasDisponiveis,
+                                       Long coordenadorId) {
         return aulaRepository.listarComFiltros(
-                disciplinaId, professorId, diaSemana, cursoId, horarioId, vagasDisponiveis);
+                disciplinaId, professorId, diaSemana, cursoId, horarioId, vagasDisponiveis,
+                coordenadorId);
     }
 
     public List<Aula> listarPorDisciplina(Long disciplinaId) {
@@ -136,6 +153,16 @@ public class AulaService {
 
     public Map<Long, Long> contarMatriculadosPorAula(Collection<Long> aulaIds) {
         return matriculaRepository.countByAulaIds(aulaIds);
+    }
+
+    /**
+     * Garante que a aula pertence ao coordenador autenticado. Usa 404 (em vez
+     * de 403) para não revelar a existência de aulas de outros coordenadores.
+     */
+    private void validarDono(Aula aula, Long coordenadorId) {
+        if (!aula.getCoordenador().getId().equals(coordenadorId)) {
+            throw new NotFoundException("Aula não encontrada: " + aula.getId());
+        }
     }
 
     private void validarReferencias(AulaRequest request) {

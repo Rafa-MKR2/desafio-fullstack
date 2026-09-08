@@ -37,6 +37,10 @@ public class Aula {
     @JoinColumn(name = "horario_id")
     private Horario horario;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "coordenador_id")
+    private Coordenador coordenador;
+
     @Column(nullable = false)
     private Integer vagas;
 
@@ -70,6 +74,14 @@ public class Aula {
 
     public void setMatriculas(List<Matricula> matriculas) {
         this.matriculas = matriculas;
+    }
+
+    public Coordenador getCoordenador() {
+        return coordenador;
+    }
+
+    public void setCoordenador(Coordenador coordenador) {
+        this.coordenador = coordenador;
     }
 
     public boolean isAtivo() {

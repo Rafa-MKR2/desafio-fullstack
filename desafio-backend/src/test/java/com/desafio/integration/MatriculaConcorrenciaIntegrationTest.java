@@ -87,7 +87,7 @@ class MatriculaConcorrenciaIntegrationTest {
         request.setProfessorId(seeder.professorId("Ana Paula"));
         request.setHorarioId(seeder.horarioId("Segunda", "08:00", "10:00"));
         request.setVagas(vagas);
-        Aula aula = aulaService.criar(request);
+        Aula aula = aulaService.criar(request, seeder.coordenadorId("coordenador1@email.com"));
         assertTrue(aula.getId() != null);
         return aula.getId();
     }

@@ -22,12 +22,17 @@ public class AulaRepository implements PanacheRepository<Aula> {
     }
 
     public List<Aula> listarComFiltros(Long disciplinaId, Long professorId, String diaSemana,
-                                       Long cursoId, Long horarioId, Boolean vagasDisponiveis) {
+                                       Long cursoId, Long horarioId, Boolean vagasDisponiveis,
+                                       Long coordenadorId) {
         StringBuilder jpql = new StringBuilder("SELECT a FROM Aula a ");
         Map<String, Object> params = new HashMap<>();
         List<String> clausulas = new ArrayList<>();
         clausulas.add("a.ativo = true");
 
+        if (coordenadorId != null) {
+            clausulas.add("a.coordenador.id = :coordenadorId");
+            params.put("coordenadorId", coordenadorId);
+        }
         if (cursoId != null) {
             jpql.append("JOIN a.cursosAutorizados c ");
             clausulas.add("c.id = :cursoId");
