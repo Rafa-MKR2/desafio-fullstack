@@ -12,16 +12,18 @@ Angular (Nx)  ──►  Quarkus REST API  ──►  PostgreSQL
 ```
 
 - **Aluno** (`aluno*@email.com`): consulta o catálogo de aulas, aplica filtros
-  (disciplina/professor/dia) e se matricula. Vê as próprias matrículas com a
-  ocupação de cada aula.
-- **Coordenador** (`coordenador*@email.com`): cria, edita e exclui aulas. A
-  criação/edição valida que o professor leciona a disciplina e que não há
-  conflito de horário; a exclusão só é permitida se a aula não tiver
-  matrículas.
+  (disciplina/professor/dia/curso/só com vaga) e se matricula. A matrícula
+  valida **curso autorizado**, vagas (com lock de concorrência) e choque de
+  horário. Vê as próprias matrículas com a ocupação de cada aula.
+- **Coordenador** (`coordenador*@email.com`): cria, edita e exclui (logicamente)
+  as **próprias** aulas — cada coordenador só vê/gerencia o seu catálogo. A
+  criação/edição define **cursos autorizados** e valida que o professor leciona
+  a disciplina e que não há conflito de horário; a exclusão só é permitida se a
+  aula não tiver matrículas.
 
 | Componente | Tecnologia | Diretório |
 |---|---|---|
-| Frontend | Angular 22, Nx, Keycloak-Angular | `desafio-frontend/` |
+| Frontend | Angular 22, Nx, RxJS, PrimeNG, Keycloak-Angular | `desafio-frontend/` |
 | Backend | Quarkus 3, Java 21, Hibernate (Panache) | `desafio-backend/` |
 | Identidade | Keycloak 24 (realm import) | `desafio-keycloak/` |
 | Orquestração | Docker Compose | `desafio-completo/` |
@@ -85,6 +87,8 @@ cd desafio-backend
 cd desafio-frontend
 npx nx test frontend
 ```
+
+Suíte atual: **62 testes backend** e **11 testes frontend**.
 
 CI (GitHub Actions) roda build + testes de backend e frontend a cada push/PR
 para `main` e `development`.
